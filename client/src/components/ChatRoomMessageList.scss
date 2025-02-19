@@ -1,0 +1,108 @@
+@charset "utf-8";
+@use "@chatscope/chat-ui-kit-styles/themes/default/main.scss";
+// Variables defined in
+// @chatscope/chat-ui-kit-styles/themes/default/_variables.scss
+// $default-font-family: 'Poppins', serif;
+.cs-main-container {
+    border-radius: 1rem;
+}
+$chat-container-message-input-bg-color: #fff;
+$chat-container-message-input-border-top: none;
+$message-input-padding: 1em !important;
+$message-input-content-editor-wrapper-bg-color: #f6f6f6;
+$color-primary: #ffffff;
+$color-primary-light: #ffffff;
+$color-primary-dark: #584FD1;
+$color-secondary: #91ECEC !default;
+$color-secondary-light: #C2F9F9 !default;
+$color-secondary-dark: #64D3D3 !default;
+$main-container-border: 0;
+$color-text: rgb(86, 86, 86);
+$typing-indicator-text-color: $color-text;
+$typing-indicator-dot-bg-color: $color-text;
+$message-content-outgoing-color: #fff !important;
+$message-list-typing-indicator-bg-color: transparent;
+.cs-typing-indicator {
+    padding: 1rem 0 1rem 1.5rem !important;
+}
+$default-bg-color: #f6f6f6;
+$message-list-scroll-wrapper-padding: 0.6em 1.2em 0 0.8em;
+
+
+.cs-chat-container {
+    background: none !important;
+    // background-color: rgba(255,255,255,0.5) !important;
+}
+.cs-message-list {
+    background: none !important;
+    overflow: scroll;
+    // background-color: rgba(255,255,255,0.5) !important;
+}
+.scrollbar-container {
+    padding: 0;
+}
+.cs-message {
+    width: 100%;
+    max-width: 100% !important;
+    // background: pink;
+    margin:0 0 0em 0!important;
+    padding: 1em;
+}
+.cs-message:nth-child(even) {
+    background: rgba(255,255,255,0.5);
+}
+.cs-message__content-wrapper {
+    width: 100%;
+    // border-radius: 0;
+}
+.cs-message__header {
+    padding-left: 1rem;
+    margin-left: 0;
+    justify-content: left;
+    // color:rgb(86, 86, 86);
+}
+.cs-message__sender-name {
+    font-weight: bold;
+    color:rgb(86, 86, 86) !important;
+}
+.cs-message__sent-time {
+    margin-left: 0 !important;
+}
+.cs-message__content {
+    border-radius: 0 !important;
+    padding-left: 1rem;
+    background: none !important;
+}
+
+.test {
+    color: #A7C7E7;
+    color: #B39DDB;
+    color: #F2B0A2;
+    color: #FFB3C6;
+    color: #F1C6D3;
+    color: #C5E1A5;
+    color: #B3E5FC;
+    color: #D1C4E9;
+    color: #FFCCBC;
+    color: #D4E157;
+    color: #FFE082;
+    color: #FFEB3B;
+    color: #A5D6A7;
+    color: #81C784;
+    color: #AED581;
+    color: #C8E6C9;
+    color: #80DEEA;
+    color: #B2EBF2;
+    color: #FFCDD2;
+    color: #FF8A65;
+    color: #F8BBD0;
+    color: #D1C4E9;
+    color: #D0E3F4;
+    color: #F0E68C;
+    color: #C5E1A5;
+    color: #B3E5FC;
+    color: #FFCCFF;
+    color: #A3D9FF;
+    color: #F7B7A3;
+    color: #E0F7FA;
+}

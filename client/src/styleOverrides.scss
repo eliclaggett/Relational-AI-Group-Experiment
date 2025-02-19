@@ -1,0 +1,104 @@
+// Recaptcha.jsx
+
+#headerImg_recaptcha {
+    height: 25em;
+    margin: 1em auto;
+    opacity: 0.9;
+    margin-top: 3em;
+}
+#landing_container {
+    // position: absolute;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    // justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+#landing_content {
+    background: rgba(255,255,255, 0);
+    // box-shadow: 0 0 3px 3px rgba(255,255,255, 0.0);
+    // box-shadow: 1px 1px 3px 0px rgba(0,0,0, 0.9);
+    // background: pink;
+    width: 38em;
+    // padding: 4em 2em;
+    border-radius: 2em;
+    margin: 0;
+    padding: 0;
+}
+
+// Survey.jsx
+.surveyQ {
+    margin-top: 4rem;
+}
+.surveyQ .surveyLabel {
+    font-weight: bold;
+    margin-bottom: 1rem;
+    display: block;
+}
+
+// Misc
+.MuiFormControlLabel-root {
+    margin-right: 0 !important;
+    margin-left: 0 !important;
+}
+.MuiFormControlLabel-root .MuiTypography-body1 {
+    font-weight: bold;
+}
+.MuiFormLabel-root.Mui-focused {
+    color: #000 !important;
+}
+.parentContainer {
+    // background-color: rgb(245, 245, 245);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+#recaptcha_dialog div {
+    margin: 0 auto;
+}
+.chatWindow-sm {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: end;
+    justify-content: space-around;
+    margin: 0!important;
+    padding: 0 0 1em 0!important;
+}
+.chatWindow-sm div {
+    margin: 1em !important;
+    padding: 0.7em !important;
+    position: relative;
+    filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+    z-index: 1;
+    background: white;
+    max-width: 15em !important;
+}
+.chatWindow-sm div:after {
+    content: '';
+    position: absolute;
+    background: white;
+    width: 1.5em;
+    height: 1.5em;
+    transform: rotate(45deg);
+    left: calc(50% - 0.75em);
+    bottom: -0.75em;
+    z-index: 0;
+}
+.chatWindowLeft, .chatWindowRight {
+    display: flex;
+    flex-shrink: 1;
+    width: auto;
+    min-width: none;
+}
+
+// ProgressList.jsx
+
+.vert-divider {
+    width: 1px;
+    background: rgba(0,0,0,0.2);
+    height: 3em;
+    margin: 0 1em;
+}

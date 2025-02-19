@@ -1,0 +1,13 @@
+node_modules
+.env
+.env_prod
+*.tar.zst
+.DS_Store
+.empirica
+.vscode
+nginx
+__pycache__
+package-lock.json
+*.tar.gz
+*.tar.zst
+*.pem

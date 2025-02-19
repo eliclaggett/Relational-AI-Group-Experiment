@@ -1,0 +1,175 @@
+textarea {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.chatRoom {
+    background-color: rgb(245, 245, 245);
+    border-top: solid 1px #eaeaea;
+}
+.msgLeft {
+    height: 100%;
+    width: 100%;
+    align-items: end;
+    justify-content: center;
+    display: flex;
+    flex-direction: column;
+}
+.msgLeft .MuiList-root {
+    width: 100%;
+}
+.msgLeft .MuiList-root {
+    width: 100%;
+}
+.msgLeft .MuiListItem-root {
+    display: flex;
+    justify-content: right;
+}
+.msgLeft .MuiListItemText-root {
+    flex-grow: 0;
+    width: 10em;
+}
+
+.MuiListItem-root.active, .chatWindow {
+    background-color: rgba(255,255,255, 0.5);
+}
+.MuiContainer-root.msgHeader {
+    padding: 2em 1em !important;
+    display: flex;
+    justify-content: space-between;
+}
+.MuiContainer-root.msgFooter {
+    /* background-color: rgb(245, 245, 245); */
+    padding: 2em 1em !important;
+    box-sizing: border-box;
+}
+.msgText .MuiInputBase-root{
+    background-color: rgb(245, 245, 245);
+    /* border-radius: 2em; */
+}
+.msgText .MuiOutlinedInput-notchedOutline {
+    border: none !important;
+}
+.roomList .MuiListItem-root.active .MuiListItemText-root {
+    font-weight: bold;
+}
+.MuiContainer-root {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.MuiListItemIcon-root, .css-cokf1l-MuiListItemIcon-root {
+    min-width: 1.5em !important;
+}
+.roomList .MuiSvgIcon-root {
+    transform: skewX(-15deg) scale(0.8);
+}
+.msgText {
+    width: 100%;
+}
+.newRoomButton {
+    width: 13em;
+    margin-right: 2em !important;
+    /* display: flex !important; */
+}
+.vertDivider {
+    background: #eee;
+    height: 100%;
+    width: 1px;
+}
+.vertDivider:last-child {
+    display: none;
+}
+.identityChooser .MuiAvatar-root img {
+    background-color: #eee;
+}
+.identityChooser.active img {
+    background-color: unset;
+}
+.identityChooser.active {
+    font-weight: bold;
+}
+
+.MuiBadge-badge {
+    background: orange;
+    border: solid 2px #eee;
+    height: 14px !important;
+    width: 14px !important;
+    border-radius: 7px !important;
+}
+.MuiBadge-root.active .MuiBadge-badge {
+    background: rgb(58, 223, 39);
+}
+
+.msgLeft .headerTxt {
+    width: 12.4em;
+    text-align: left;
+    display: block;
+    font-weight:bold;
+}
+.msgRight .headerTxt {
+    padding-left: 1.5em;
+    text-align: left;
+    display: block;
+    font-weight:bold;
+}
+.msgRight .note {
+    padding-left: 1.5em;
+    text-align: left;
+    display: block;
+    font-weight: normal !important;
+}
+.userList .MuiTypography-body1 {
+    font-weight: bold;
+    color: #555;
+}
+.room {
+    cursor: pointer;
+}
+.room:hover {
+    background: rgba(0,0,0,0.05);
+}
+.hidden {
+    display: none !important;
+}
+/* Fix message send button */
+span button {
+    height: 2.5em;
+}
+
+.timeRemaining {
+    font-size: 0.9em !important;
+    transition: color 0.5s;
+    color: inherit;
+    vertical-align: baseline;
+}
+.timeRemaining.low {
+    color: rgb(255, 157, 0);
+}
+
+/* AI Suggestions */
+
+.suggestion {
+    background-color: rgb(206, 253, 211);
+    color: #106f2b;
+    border-radius: 1.5em;
+    padding: 0.5em 1em;
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    transition: filter 0.07s;
+    
+}
+.suggestion:hover {
+    filter: drop-shadow(1px 1px 4px rgb(30, 196, 30));
+}
+.suggestion:before {
+    content: '';
+    background-color: rgb(206, 253, 211);
+    width: 1em;
+    height: 1em;
+    position: absolute;
+    top: -0.3em;
+    left: 0.8em;
+    transform: rotate(45deg);
+}
