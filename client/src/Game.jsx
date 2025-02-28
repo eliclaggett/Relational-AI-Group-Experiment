@@ -11,20 +11,18 @@ import Ready from "./steps/Ready.jsx";
 import End from "./steps/exit/End.jsx";
 
 export function Game() {
-  
-  const player = usePlayer();
-  const game = useGame();
   const stage = useStage();
-  const stageName = stage?.get('name') || '';
-  const step = player.get('step');
+  const stageName = stage?.get("name") || "";
 
-  let ui = <End/>;
-  // let ui = '';
-  // if (step != 'end') {
-    if (stageName == 'group-discussion') { ui = <Chat/>; }
-    else if (stageName == 'summary-task') { ui = <Summary/>; }
-    else if (stageName == 'ready') { ui = <Ready/>; }
-  // }
+  let ui = <End />;
+
+  if (stageName == "ready") {
+    ui = <Ready />;
+  } else if (stageName == "group-discussion") {
+    ui = <Chat />;
+  } else if (stageName == "summary-task") {
+    ui = <Summary />;
+  }
 
   // also need to include Summary task here.
   return ui;

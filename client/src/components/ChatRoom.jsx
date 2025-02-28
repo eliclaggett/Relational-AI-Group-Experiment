@@ -70,11 +70,11 @@ export default function ChatRoom({}) {
   };
   const participantIdx = player.get("participantIdx");
   const participantStep = player.get("step") || "";
-  const viewingRoom = player.get("viewingRoom") || 0; // TODO: Remove else
-  const activeRoom = player.get("activeRoom"); // TODO: Remove else
+  const viewingRoom = player.get("viewingRoom") || 0;
+  const activeRoom = player.get("activeRoom");
   const [newRoomOpen, setNewRoomOpen] = React.useState(false);
-  const rooms = game.get("chatRooms") || [{ id: 0, title: "tutorial-room" }]; // TODO: Change to game parameter
-  const chatParticipants = game.get("chatParticipants"); // TODO: Change to game parameter
+  const rooms = game.get("chatRooms") || [{ id: 0, title: "tutorial-room" }];
+  const chatParticipants = game.get("chatParticipants");
   const messages = game.get("chatChannel-" + viewingRoom) || [];
   const [drafts, setDrafts] = useState({});
   const [tooltipOpen, setTooltipOpen] = useState(false);
@@ -86,6 +86,7 @@ export default function ChatRoom({}) {
       self = chatParticipants[idx];
     }
   }
+
   const selfLastActiveDiff = (new Date().getTime() - self.active) / 1000;
   if (
     participantStep == "group-discussion" &&
@@ -116,8 +117,6 @@ export default function ChatRoom({}) {
     document.querySelector("textarea:not([readonly])").value =
       drafts[viewingRoom];
   }, [viewingRoom]);
-
-  console.log(rooms);
 
   useEffect(() => {
     setReceivedCompletion(false);
@@ -216,6 +215,7 @@ export default function ChatRoom({}) {
   }
   function joinRoom() {
     player.set("activeRoom", viewingRoom);
+    player.set("joinedRooms", [...player.get("joinedRooms"), viewingRoom]);
   }
 
   function generateRoomListItems(rooms) {

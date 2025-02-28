@@ -206,6 +206,7 @@ const botTexts = JSON.parse(
 
 const gameParams = {
   mode: "prod",
+  condition: "relational-static", // control, personal, relational-static, relational-dynamic
   promptCategory: "pgh",
   version: "February 2025",
   completionCode: "XYZXYZ",
@@ -231,10 +232,10 @@ const gameParams = {
     q2: "I have read and understand the information above.",
     q3: "I have reviewed the eligibility requirements listed in the Participant Requirements section of this consent form and certify that I am eligible to participate in this research, to the best of my knowledge.",
     q4: "I want to participate in this research and continue with the game.",
-  }
+  },
 };
 
-gameParams.topics = botTexts[gameParams.promptCategory]['topics'];
+gameParams.topics = botTexts[gameParams.promptCategory]["topics"];
 shuffle(gameParams.topics);
 
 let playerCounter = 0;
@@ -271,8 +272,6 @@ if (gameParams.mode == "dev") {
   };
 }
 
-
-
 const prompts = botTexts[gameParams.promptCategory];
 
 // Called when a participant joins the experiment
@@ -291,6 +290,7 @@ Empirica.on("player", (ctx, { player, _ }) => {
   );
   player.set("participantIdx", playerCounter);
   player.set("activeRoom", -1);
+  player.set("joinedRooms", []);
   player.set("viewingRoom", 0);
   chatParticipants[playerCounter] = {
     name: "tutorial-user",
@@ -425,11 +425,13 @@ Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
   player.set("viewingRoom", roomCounter);
   player.set("activeRoom", roomCounter);
   player.currentGame.set("chatRooms", chatRooms);
-  player.currentGame.set("chatChannel-" + roomCounter, [{
-    sender: "-1",
-    dt: new Date().getTime(),
-    content: prompts["prompt1"][topic],
-  }]);
+  player.currentGame.set("chatChannel-" + roomCounter, [
+    {
+      sender: "-1",
+      dt: new Date().getTime(),
+      content: prompts["prompt1"][topic],
+    },
+  ]);
 
   for (
     let minutePassed = 0;
@@ -517,7 +519,6 @@ Empirica.on(
       let chatLog = "";
       for (const msg of msgs) {
         if (msg.sender == -2) {
-          //TODO: TEST ONLY, THIS LOGIC IS FAKE
           chatLog += "YOU: " + msg.content;
         } else if (msg.sender == -1) {
           chatLog += "MODERATOR: " + msg.content;
@@ -597,7 +598,7 @@ Empirica.onStageStart(({ stage }) => {
   const stageName = stage.get("name");
   console.log("stage started: " + stageName);
   if (stageName == "group-discussion") {
-    console.log('initializing chat');
+    console.log("initializing chat");
     const remainingPlayers = stage.currentGame.players.filter((p) =>
       p.get("ready")
     );
@@ -648,11 +649,14 @@ Empirica.onStageStart(({ stage }) => {
     stage.currentGame.set("topic", topic);
 
     // Create chat rooms
-    console.log('remaining players: ' + remainingPlayers.length);
+    console.log("remaining players: " + remainingPlayers.length);
     let numCreatedGroups = 0;
     for (let i = 0; i < remainingPlayers.length; i++) {
       // Create a new chat room when the previous is full
-      const targetNumParticipants = remainingPlayers.length > 5 ? initialGroupsBySampleSize[remainingPlayers.length][numCreatedGroups] : targetParticipantsPerGroup;
+      const targetNumParticipants =
+        remainingPlayers.length > 5
+          ? initialGroupsBySampleSize[remainingPlayers.length][numCreatedGroups]
+          : targetParticipantsPerGroup;
 
       if (i % targetNumParticipants == 0) {
         roomCounter += 1;
