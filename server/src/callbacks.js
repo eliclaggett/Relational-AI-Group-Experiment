@@ -5,25 +5,10 @@ import dotenv from "dotenv";
 import findConfig from "find-config";
 import OpenAI from "openai";
 const openai = new OpenAI();
-
+import { shuffle, calculateEntropyFromData } from "./utils.js";
 export const Empirica = new ClassicListenersCollector();
 
-function shuffle(array) {
-  let currentIndex = array.length;
-
-  // While there remain elements to shuffle...
-  while (currentIndex != 0) {
-    // Pick a remaining element...
-    let randomIndex = Math.floor(Math.random() * currentIndex);
-    currentIndex--;
-
-    // And swap it with the current element.
-    [array[currentIndex], array[randomIndex]] = [
-      array[randomIndex],
-      array[currentIndex],
-    ];
-  }
-}
+let discussionMinutesElapsed = 0;
 
 const colors = [
   "#A7C7E7",
@@ -193,31 +178,65 @@ shuffle(colors);
 shuffle(animals);
 shuffle(shapes);
 
-const chatRooms = {
-  // 0: { title: shapes[0] },
-  // 1: { title: shapes[1] },
-  // 2: { title: shapes[2] },
+const chatRooms = {};
+
+const initialGroupsBySampleSize = {
+  6: [3, 3],
+  7: [3, 4],
+  8: [4, 4],
+  9: [3, 3, 3],
+  10: [3, 3, 4],
+  11: [3, 4, 4],
+  12: [4, 4, 4],
+  13: [3, 3, 3, 4],
+  14: [3, 3, 4, 4],
+  15: [3, 4, 4, 4],
+  16: [4, 4, 4, 4],
 };
+const targetParticipantsPerGroup = 3;
+
+const botTexts = JSON.parse(
+  fs.readFileSync(
+    process.env["EXPERIMENT_DIR"] +
+      "/" +
+      process.env["EXPERIMENT_NAME"] +
+      "/texts.json"
+  )
+);
 
 const gameParams = {
-  mode: "dev",
+  mode: "prod",
+  promptCategory: "pgh",
   version: "February 2025",
   completionCode: "XYZXYZ",
-  targetPlayersPerRoom: 3,
+  minPlayersPerRoom: 3,
+  maxPlayersPerRoom: 3,
   studyTime: 25,
-  basePay: 4,
+  surveyPay: 1.5,
+  discussionPay: 1.5,
   bonusPerParticipant: 1,
-  maxBonus: 8,
+  maxBonus: 5,
   maxWaitTime: 5,
   inactivityMax: 180, // seconds
   inactivityWarning: 120, // seconds
 
-  chatTime: 99,
+  chatTime: 15,
   lobbyTime: 5,
   summaryTime: 5,
   followupDelay1: 2,
   followupDelay2: 2,
+
+  consentQuestions: {
+    q1: "I am age 18 or older.",
+    q2: "I have read and understand the information above.",
+    q3: "I have reviewed the eligibility requirements listed in the Participant Requirements section of this consent form and certify that I am eligible to participate in this research, to the best of my knowledge.",
+    q4: "I want to participate in this research and continue with the game.",
+  }
 };
+
+gameParams.topics = botTexts[gameParams.promptCategory]['topics'];
+shuffle(gameParams.topics);
+
 let playerCounter = 0;
 let roomCounter = -1;
 let promptInterval = null;
@@ -252,14 +271,9 @@ if (gameParams.mode == "dev") {
   };
 }
 
-const botTexts = JSON.parse(
-  fs.readFileSync(
-    process.env["EXPERIMENT_DIR"] +
-      "/" +
-      process.env["EXPERIMENT_NAME"] +
-      "/texts.json"
-  )
-);
+
+
+const prompts = botTexts[gameParams.promptCategory];
 
 // Called when a participant joins the experiment
 Empirica.on("player", (ctx, { player, _ }) => {
@@ -337,21 +351,27 @@ Empirica.on(
     // Ensure participants consent
     const consentFormResponse = submitConsentForm;
     let passedConsentForm = true;
-    for (q in consentFormResponse) {
-      if (consentFormResponse[q] != "yes") {
+
+    for (const q in gameParams.consentQuestions) {
+      if (!(q in consentFormResponse && consentFormResponse[q] == "yes")) {
         passedConsentForm = false;
       }
     }
+    player.set("passedConsentForm", passedConsentForm);
 
     if (passedConsentForm) {
       player.set("step", "tutorial");
     }
-
-    // Update participant with whether they consent to participate in the experiment
-    player.set("passedConsentForm", passedConsentForm);
-    Empirica.flush();
   }
 );
+
+Empirica.on("player", "passedTutorial", (_, { player, passedTutorial }) => {
+  player.set("step", "survey");
+});
+
+Empirica.on("player", "surveyAnswers", (_, { player, surveyAnswers }) => {
+  player.set("step", "lobby");
+});
 
 Empirica.on("player", "selfIdentity", (_, { player, selfIdentity }) => {
   const participantIdx = player.get("participantIdx");
@@ -400,13 +420,49 @@ Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
   }
   chatRooms[roomCounter] = { title: shapes[roomCounter] };
 
+  const topic = player.currentGame.get("topic");
+
   player.set("viewingRoom", roomCounter);
   player.set("activeRoom", roomCounter);
   player.currentGame.set("chatRooms", chatRooms);
-  player.currentGame.set("chatChannel-" + roomCounter, []);
-  roomCounter += 1;
+  player.currentGame.set("chatChannel-" + roomCounter, [{
+    sender: "-1",
+    dt: new Date().getTime(),
+    content: prompts["prompt1"][topic],
+  }]);
 
-  Empirica.flush();
+  for (
+    let minutePassed = 0;
+    minutePassed <= discussionMinutesElapsed;
+    minutePassed++
+  ) {
+    let nextPrompt = "";
+    // Add moderator messages to the new chat room
+    if (minutePassed == gameParams["followupDelay1"]) {
+      nextPrompt = prompts["prompt2"][topic];
+    } else if (
+      minutePassed ==
+      gameParams["followupDelay1"] + gameParams["followupDelay2"]
+    ) {
+      nextPrompt = prompts["prompt3"][topic];
+    }
+
+    if (nextPrompt.length > 0) {
+      const msgs = player.currentGame.get("chatChannel-" + roomCounter) || [];
+
+      player.currentGame.set("chatChannel-" + roomCounter, [
+        ...msgs,
+        {
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: nextPrompt,
+        },
+      ]);
+    }
+  }
+
+  // TODO: Add messages from bot moderator
+  roomCounter += 1;
 });
 
 Empirica.on("player", "resetInactivity", (_, { player, resetInactivity }) => {
@@ -446,44 +502,55 @@ Empirica.on(
   "requestAIAssistance",
   async (_, { player, requestAIAssistance }) => {
     if (requestAIAssistance.id > -1) {
-
       const topics = [
-          "evolution being taught as a fact of biology",
-          "protecting the second amendment right to bear arms",
-          "funding the military",
-          "the idea that children are being indoctrinated at school with LGBT messaging",
-          "paying higher taxes to support climate change research",
-          "the idea that COVID-19 restrictions went too far",
-          "having stricter immigration requirements into the U.S."
+        "evolution being taught as a fact of biology",
+        "protecting the second amendment right to bear arms",
+        "funding the military",
+        "the idea that children are being indoctrinated at school with LGBT messaging",
+        "paying higher taxes to support climate change research",
+        "the idea that COVID-19 restrictions went too far",
+        "having stricter immigration requirements into the U.S.",
       ];
 
-      const viewingRoom = player.get('viewingRoom');
-      const msgs = player.currentGame.get('chatChannel-'+viewingRoom);
-      let chatLog = '';
+      const viewingRoom = player.get("viewingRoom");
+      const msgs = player.currentGame.get("chatChannel-" + viewingRoom);
+      let chatLog = "";
       for (const msg of msgs) {
-        if (msg.sender == -2) { //TODO: TEST ONLY, THIS LOGIC IS FAKE
-          chatLog += 'YOU: ' + msg.content;
+        if (msg.sender == -2) {
+          //TODO: TEST ONLY, THIS LOGIC IS FAKE
+          chatLog += "YOU: " + msg.content;
         } else if (msg.sender == -1) {
-          chatLog += 'MODERATOR: ' + msg.content;
+          chatLog += "MODERATOR: " + msg.content;
         } else {
-          chatLog += 'PARTNER: ' + msg.content;
+          chatLog += "PARTNER: " + msg.content;
         }
       }
 
       const completion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
-          { role: "system", content: "Your task is to simulate the user labeled \"YOU\" in the conversations shown to you. Make your replies consistent with the emotional state of the person you're simulating and their attitude toward their conversation partner." },
+          {
+            role: "system",
+            content:
+              'Your task is to simulate the user labeled "YOU" in the conversations shown to you. Make your replies consistent with the emotional state of the person you\'re simulating and their attitude toward their conversation partner.',
+          },
           {
             role: "user",
-            content: 'Continue the discussion as the person labeled "YOU" in a text message chat about '+topics[parseInt(player.currentGame.get('topic'))]+'. If your partner says something interesting or unclear, consider asking them to elaborate. Here are the last few messages of the discussion:\n\n"'+chatLog+'"\n\nReply to the last message sent by PARTNER. Do not respond to the person labeled MODERATOR. Since you and your partner may have different ideologies, be positive, use perspective-sharing, humanization, and conversational receptiveness to build rapport with your partner even though they might disagree with you. DO NOT WRITE MORE THAN 10 WORDS!',
+            content:
+              'Continue the discussion as the person labeled "YOU" in a text message chat about ' +
+              topics[parseInt(player.currentGame.get("topic"))] +
+              '. If your partner says something interesting or unclear, consider asking them to elaborate. Here are the last few messages of the discussion:\n\n"' +
+              chatLog +
+              '"\n\nReply to the last message sent by PARTNER. Do not respond to the person labeled MODERATOR. Since you and your partner may have different ideologies, be positive, use perspective-sharing, humanization, and conversational receptiveness to build rapport with your partner even though they might disagree with you. DO NOT WRITE MORE THAN 10 WORDS!',
           },
         ],
         store: false,
       });
 
-      let reply = completion.choices[0].message['content'];
-      if (reply.slice(0,3) == 'YOU') { reply = reply.slice(4); }
+      let reply = completion.choices[0].message["content"];
+      if (reply.slice(0, 3) == "YOU") {
+        reply = reply.slice(4);
+      }
 
       player.set("suggestedReply", {
         id: requestAIAssistance.id + 1,
@@ -514,11 +581,11 @@ Empirica.onGameStart(({ game }) => {
 
   // Get participants who passed all preceding steps
   for (const player of game.players) {
-    if (!readyPlayerList.has(player.id)) {
-      player.set("end", true);
-      player.set("endReason", "not-ready");
-      continue;
-    }
+    // if (!readyPlayerList.has(player.id)) {
+    //   player.set("end", true);
+    //   player.set("endReason", "not-ready");
+    //   continue;
+    // }
 
     player.set("step", "ready");
   }
@@ -526,49 +593,45 @@ Empirica.onGameStart(({ game }) => {
 
 Empirica.onRoundStart(({ round }) => {});
 
-function pickTopicFor(remainingPlayers) {
-  // TODO: Implement function
-  return 0;
-}
-
-function entropy(probabilities, base = 2) {
-  return -probabilities.reduce((sum, p) => p > 0 ? sum + p * Math.log(p) / Math.log(base) : sum, 0);
-}
-function calculateEntropyFromData(data, base = 2) {
-  const total = data.length;
-  const counts = data.reduce((acc, num) => {
-    acc[num] = (acc[num] || 0) + 1;
-    return acc;
-  }, {});
-
-  const probabilities = Object.values(counts).map((count) => count / total);
-  return entropy(probabilities, base);
-}
-
 Empirica.onStageStart(({ stage }) => {
   const stageName = stage.get("name");
   console.log("stage started: " + stageName);
   if (stageName == "group-discussion") {
+    console.log('initializing chat');
     const remainingPlayers = stage.currentGame.players.filter((p) =>
       p.get("ready")
     );
 
+    const notReadyPlayers = stage.currentGame.players.filter(
+      (p) => p.get("ready") != true
+    );
+    for (let i = 0; i < notReadyPlayers.length; i++) {
+      notReadyPlayers[i].set("ended", true);
+      notReadyPlayers[i].set("endReason", "not-ready");
+    }
+
     // Decide topic
     // Get highest polarization topic from surveyAnswers
-    const answersPerQuestion = {0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: []};
-    const entropyPerQuestion = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0};
+    const answersPerQuestion = {};
+    const entropyPerQuestion = {};
+    gameParams.topics.forEach((_, index) => {
+      answersPerQuestion[index] = [];
+    });
+    gameParams.topics.forEach((_, index) => {
+      entropyPerQuestion[index] = 0;
+    });
 
     for (const player of remainingPlayers) {
-      const answers = player.get('surveyAnswers');
+      const answers = player.get("surveyAnswers");
       for (const k in answers) {
         answersPerQuestion[k].push(parseInt(answers[k]));
       }
     }
-    
+
     for (const k in entropyPerQuestion) {
       entropyPerQuestion[k] = calculateEntropyFromData(answersPerQuestion[k]);
     }
-    
+
     maxEntropyKs = [0];
     maxEntropyV = 0;
     for (const k in entropyPerQuestion) {
@@ -579,15 +642,19 @@ Empirica.onStageStart(({ stage }) => {
         maxEntropyKs.push(k);
       }
     }
-    
+
     // Select random topic with max entropy
     const topic = maxEntropyKs[Math.floor(Math.random() * maxEntropyKs.length)];
-    stage.currentGame.set('topic', topic);
+    stage.currentGame.set("topic", topic);
 
     // Create chat rooms
+    console.log('remaining players: ' + remainingPlayers.length);
+    let numCreatedGroups = 0;
     for (let i = 0; i < remainingPlayers.length; i++) {
       // Create a new chat room when the previous is full
-      if (i % gameParams.targetPlayersPerRoom == 0) {
+      const targetNumParticipants = remainingPlayers.length > 5 ? initialGroupsBySampleSize[remainingPlayers.length][numCreatedGroups] : targetParticipantsPerGroup;
+
+      if (i % targetNumParticipants == 0) {
         roomCounter += 1;
         chatRooms[roomCounter] = { title: shapes[roomCounter] };
       }
@@ -597,6 +664,8 @@ Empirica.onStageStart(({ stage }) => {
       remainingPlayers[i].set("viewingRoom", roomCounter);
       remainingPlayers[i].set("activeRoom", roomCounter);
       chatParticipants[playerIdx].room = roomCounter;
+      // Set all participants as active
+      chatParticipants[playerIdx].active = new Date().getTime();
     }
     roomCounter += 1;
     stage.currentGame.set("chatRooms", chatRooms);
@@ -604,20 +673,19 @@ Empirica.onStageStart(({ stage }) => {
 
     // Send initial chatbot messages
     // Send initial messages
-    let currentMinute = 0;
 
     for (const k of Object.keys(chatRooms)) {
       const msgs = [];
-      msgs.push({
-        sender: "-1",
-        dt: new Date().getTime(),
-        content: botTexts["welcomeMessage"],
-      });
+      // msgs.push({
+      //   sender: "-1",
+      //   dt: new Date().getTime(),
+      //   content: botTexts["welcomeMessage"],
+      // });
 
       msgs.push({
         sender: "-1",
         dt: new Date().getTime(),
-        content: botTexts["customExamples"][topic],
+        content: prompts["prompt1"][topic],
       });
 
       stage.currentGame.set("chatChannel-" + k, msgs);
@@ -630,13 +698,13 @@ Empirica.onStageStart(({ stage }) => {
       for (const k of Object.keys(chatRooms)) {
         // Send messages every couple of minutes unless either the participant or their partner requests an early finish
         // If an early finish is requested, we break out of the schedule
-        if (currentMinute == gameParams["followupDelay1"]) {
-          nextPrompt = botTexts["customPrompts"][topic];
+        if (discussionMinutesElapsed == gameParams["followupDelay1"]) {
+          nextPrompt = prompts["prompt2"][topic];
         } else if (
-          currentMinute ==
+          discussionMinutesElapsed ==
           gameParams["followupDelay1"] + gameParams["followupDelay2"]
         ) {
-          nextPrompt = botTexts["customFollowups"][topic];
+          nextPrompt = prompts["prompt3"][topic];
         }
 
         if (nextPrompt.length > 0) {
@@ -646,7 +714,7 @@ Empirica.onStageStart(({ stage }) => {
             ...msgs,
             {
               sender: "-1",
-              dt: (new Date()).getTime(),
+              dt: new Date().getTime(),
               content: nextPrompt,
             },
           ]);
@@ -655,13 +723,14 @@ Empirica.onStageStart(({ stage }) => {
 
       // Must run Empirica.flush() for asynchronous updates to be processed
       Empirica.flush();
-      currentMinute++;
+      discussionMinutesElapsed++;
 
-      if (currentMinute > gameParams.chatTime) {
+      if (discussionMinutesElapsed > gameParams.chatTime) {
         clearInterval(promptInterval);
       }
     }, 60 * 1000); // Once per minute
   }
+  Empirica.flush();
 });
 
 Empirica.onStageEnded(({ stage }) => {

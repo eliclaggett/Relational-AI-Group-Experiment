@@ -9,7 +9,7 @@
 
 // Imports
 import * as React from "react";
-import { Button, Container, Typography, Stack, IconButton, Avatar } from "@mui/material";
+import { Typography, Stack, IconButton, Avatar } from "@mui/material";
 import { useEffect, useState } from "react";
 import { usePlayer, useGame } from "@empirica/core/player/classic/react";
 import { msToTime } from "../../utils/formatting";
@@ -20,25 +20,25 @@ export default function Lobby() {
   // Useful variables
   const player = usePlayer();
   const game = useGame();
-  const gameParams = game.get('gameParams');
+  const gameParams = game.get("gameParams");
   let lobbyTimeout = game.get("lobbyTimeout") || false;
 
   // State variables
-  const now = new Date();
-  const [timeRemaining, setTimeRemaining] = useState(
-    "--:--"
-  );
-  const [taskInstructionDisplay, setTaskInstructionDisplay] = useState("none");
-  const [lobbyDisplay, setLobbyDisplay] = useState("block");
-  const readInstructions = player.get("readChatFeatures") || false;
-  const [buttonDisplay, setButtonDisplay] = useState("flex");
+  const [timeRemaining, setTimeRemaining] = useState("--:--");
 
   // Run on component load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     // Start a timer that we can show in the UI
     if (!lobbyTimeout) {
       game.set("startLobby", true);
-      game.set('lobbyTimeout', Date.now() + parseInt(game.get("lobbyDuration")) / 1000 / 1000);
+      game.set(
+        "lobbyTimeout",
+        Date.now() + parseInt(game.get("lobbyDuration")) / 1000 / 1000
+      );
     }
 
     // Poll the timer
@@ -54,19 +54,27 @@ export default function Lobby() {
     return () => clearInterval(interval);
   }, [lobbyTimeout]);
 
-  const animalOptions = player.get('animalOptions') || [];
-  const color = player.get('color');
-  const selfIdentity = player.get('selfIdentity') || '';
-  let disabled = selfIdentity == '';
-  
+  const animalOptions = player.get("animalOptions") || [];
+  const color = player.get("color");
+  const selfIdentity = player.get("selfIdentity") || "";
+
   function selectIdentity(animal) {
-    player.set('selfIdentity', animal);
+    player.set("selfIdentity", animal);
   }
 
   function generateAnimalList(animals) {
     return animals.map((animal) => {
       return (
-        <Stack direction={"column"} alignItems={"center"} className={selfIdentity == animal ? 'identityChooser active' :'identityChooser'} key={animal}>
+        <Stack
+          direction={"column"}
+          alignItems={"center"}
+          className={
+            selfIdentity == animal
+              ? "identityChooser active"
+              : "identityChooser"
+          }
+          key={animal}
+        >
           <IconButton onClick={() => selectIdentity(animal)}>
             <Avatar
               alt={animal}
@@ -84,46 +92,60 @@ export default function Lobby() {
   return (
     <Stack maxWidth="100vw" className="parentContainer">
       <Stack
-        sx={{ height: "100vh", width: {
-          xs: '40rem',
-          md: '50rem',
-          lg: '70rem',
-        } }}
+        sx={{
+          height: "100vh",
+          width: {
+            xs: "40rem",
+            md: "50rem",
+            lg: "70rem",
+          },
+        }}
         direction={"column"}
         gap={3}
       >
         <ProgressList
           items={[
-            { name: "Initial Survey", time: "~"+gameParams.lobbyTime.toString() +" min" },
-      { name: "Group Discussion", time: "~"+gameParams.chatTime.toString() +" min" },
-      { name: "Summary Task", time: "~"+gameParams.summaryTime.toString() +" min" },
+            {
+              name: "Initial Survey",
+              time: "~" + gameParams.lobbyTime.toString() + " min",
+            },
+            {
+              name: "Group Discussion",
+              time: "~" + gameParams.chatTime.toString() + " min",
+            },
+            {
+              name: "Summary Task",
+              time: "~" + gameParams.summaryTime.toString() + " min",
+            },
           ]}
           active={0}
         />
-      
-          <Typography variant="h1" sx={{ pt: 12 }}>
-            Thank you for completing the survey.
-          </Typography>
-          <Typography variant="body1">
-            Once all other participants to finish before we begin the group
-            discussion task.
-          </Typography>
-          <Typography variant="body1">
-            You will wait a maximimum of {timeRemaining}.
-          </Typography>
-          <Typography variant="body1">
-            When all participants are finished with the survey, you will have 30
-            seconds to click "Ready" to continue with the study.
-          </Typography>
-          <Typography variant="body1">
-            While you wait, please select an identity to use for the group
-            discussion.
-          </Typography>
-          <Typography variant="body1"><b>Click on the identity you would like to use during the chat.</b></Typography>
-            <Stack direction={"row"} gap={2}>
-              {generateAnimalList(animalOptions)}
-            </Stack>
-            {/* <Button variant='contained' onClick={() => player.set('ready', true)}>Ready</Button> */}
+
+        <Typography variant="h1" sx={{ pt: 12 }}>
+          Thank you for completing the survey.
+        </Typography>
+        <Typography variant="body1">
+          Once all other participants to finish before we begin the group
+          discussion task.
+        </Typography>
+        <Typography variant="body1">
+          You will wait a maximimum of {timeRemaining}.
+        </Typography>
+        <Typography variant="body1">
+          When all participants are finished with the survey, you will have 30
+          seconds to click "Ready" to continue with the study.
+        </Typography>
+        <Typography variant="body1">
+          While you wait, please select an identity to use for the group
+          discussion.
+        </Typography>
+        <Typography variant="body1">
+          <b>Click on the identity you would like to use during the chat.</b>
+        </Typography>
+        <Stack direction={"row"} gap={2}>
+          {generateAnimalList(animalOptions)}
+        </Stack>
+        {/* <Button variant='contained' onClick={() => player.set('ready', true)}>Ready</Button> */}
       </Stack>
     </Stack>
   );

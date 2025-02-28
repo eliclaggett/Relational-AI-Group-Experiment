@@ -18,8 +18,8 @@ export function Game() {
   const stageName = stage?.get('name') || '';
   const step = player.get('step');
 
-  // let ui = <End/>;
-  let ui = '';
+  let ui = <End/>;
+  // let ui = '';
   // if (step != 'end') {
     if (stageName == 'group-discussion') { ui = <Chat/>; }
     else if (stageName == 'summary-task') { ui = <Summary/>; }

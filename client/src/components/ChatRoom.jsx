@@ -7,11 +7,10 @@
  */
 
 // Imports
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import {
   usePlayer,
   useGame,
-  useStageTimer,
   useStage,
 } from "@empirica/core/player/classic/react";
 import {
@@ -39,16 +38,13 @@ import TagIcon from "@mui/icons-material/Tag";
 import AddIcon from "@mui/icons-material/Add";
 import { SendRounded } from "@mui/icons-material";
 import {
-  MainContainer,
   ChatContainer,
   MessageList,
   Message,
-  TypingIndicator,
   Avatar as ChatAvatar,
 } from "@chatscope/chat-ui-kit-react";
 import "./ChatRoom.css";
 import "./ChatRoomMessageList.scss";
-import { msToTime } from "../utils/formatting.js";
 
 function minutesAgo(timestamp) {
   const now = new Date();
@@ -74,8 +70,6 @@ export default function ChatRoom({}) {
   };
   const participantIdx = player.get("participantIdx");
   const participantStep = player.get("step") || "";
-  const selfIdentity = player.get("selfIdentity");
-  const color = player.get("color");
   const viewingRoom = player.get("viewingRoom") || 0; // TODO: Remove else
   const activeRoom = player.get("activeRoom"); // TODO: Remove else
   const [newRoomOpen, setNewRoomOpen] = React.useState(false);
@@ -84,20 +78,22 @@ export default function ChatRoom({}) {
   const messages = game.get("chatChannel-" + viewingRoom) || [];
   const [drafts, setDrafts] = useState({});
   const [tooltipOpen, setTooltipOpen] = useState(false);
-  const stageTimer = useStageTimer();
-  const timeLeft = stageTimer?.remaining ? stageTimer.remaining : 0;
   const [receivedCompletion, setReceivedCompletion] = useState(false);
   let self = {};
+
   for (const idx in chatParticipants) {
     if (idx == participantIdx) {
       self = chatParticipants[idx];
     }
   }
   const selfLastActiveDiff = (new Date().getTime() - self.active) / 1000;
-  if (selfLastActiveDiff > gameParams.inactivityMax) {
-    player.set('end', true);
-    player.set('step', 'end');
-    player.set('endReason', 'timeout');
+  if (
+    participantStep == "group-discussion" &&
+    selfLastActiveDiff > gameParams.inactivityMax
+  ) {
+    player.set("ended", true);
+    player.set("step", "end");
+    player.set("endReason", "timeout");
   }
 
   useEffect(() => {
@@ -110,8 +106,8 @@ export default function ChatRoom({}) {
 
   if (stageName == "intro" && player.get("passedTutorialMessage")) {
     messages.push({
-      content: "Hello world!",
-      sender: player.get("participantIdx"),
+      content: "Hello world",
+      sender: player.get("participantIdx").toString(),
       dt: new Date().getTime(),
     });
   }
@@ -121,23 +117,21 @@ export default function ChatRoom({}) {
       drafts[viewingRoom];
   }, [viewingRoom]);
 
-  function requestCompletion() {
-    player.set("requestAIAssistance", { id: player.get("lastRequestID") + 1 });
-  }
+  console.log(rooms);
 
   useEffect(() => {
     setReceivedCompletion(false);
-    // Request AI assistance for every new message
-    console.log('received message');
-    if (stageName == 'group-discussion' && messages[messages.length - 1].sender != participantIdx) {
-      console.log('requesting assistance');
-      player.set("requestAIAssistance", { id: player.get("gtID") + 1 });
-    }
+    // // Request AI assistance for every new message
+    // console.log('received message');
+    // if (stageName == 'group-discussion' && messages[messages.length - 1].sender != participantIdx) {
+    //   console.log('requesting assistance');
+    //   player.set("requestAIAssistance", { id: player.get("gtID") + 1 });
+    // }
   }, [messages]);
 
   useEffect(() => {
-    if (suggestion.id > player.get('lastRequestID')) {
-      player.set('lastRequestID', suggestion.id);
+    if (suggestion.id > player.get("lastRequestID")) {
+      player.set("lastRequestID", suggestion.id);
       setReceivedCompletion(true);
     }
   }, [suggestion]);
@@ -323,14 +317,14 @@ export default function ChatRoom({}) {
     setNewRoomOpen(false);
   }
   function handleCopySuggestion() {
-    document.querySelector('textarea:not([readonly])').value = suggestion.content;
+    document.querySelector("textarea:not([readonly])").value =
+      suggestion.content;
     let currentDrafts = drafts;
     currentDrafts[viewingRoom] = suggestion.content;
     setDrafts(currentDrafts);
     setReceivedCompletion(false);
   }
   function handleSendSuggestion() {
-    
     game.set("chatChannel-" + activeRoom, [
       ...messages,
       {
@@ -339,7 +333,7 @@ export default function ChatRoom({}) {
         sender: participantIdx.toString(),
       },
     ]);
-  
+
     setReceivedCompletion(false);
     player.set("sendMsg", {
       sender: participantIdx.toString(),
@@ -442,8 +436,15 @@ export default function ChatRoom({}) {
             </span>
           </Tooltip>
         </Container>
-        <Container sx={{ p: "0em 1em 1em 1em !important", display: receivedCompletion ? 'flex' : 'none' }}>
-          <div className="suggestion" onClick={handleCopySuggestion}>{suggestion.content}</div>
+        <Container
+          sx={{
+            p: "0em 1em 1em 1em !important",
+            display: receivedCompletion ? "flex" : "none",
+          }}
+        >
+          <div className="suggestion" onClick={handleCopySuggestion}>
+            {suggestion.content}
+          </div>
           <span>
             <IconButton
               variant="plain"
@@ -454,7 +455,6 @@ export default function ChatRoom({}) {
               <SendRounded />
             </IconButton>
           </span>
-          
 
           {/* <div className={suggestionClass}>
         <span onClick={handleSuggestionClick}>Suggestion (click to copy)</span>
@@ -541,7 +541,10 @@ export default function ChatRoom({}) {
         </DialogActions>
       </Dialog>
       <Dialog
-        open={stageName == 'group-discussion' && selfLastActiveDiff > gameParams.inactivityWarning}
+        open={
+          stageName == "group-discussion" &&
+          selfLastActiveDiff > gameParams.inactivityWarning
+        }
         onClose={handleCancelTimeout}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"

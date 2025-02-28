@@ -8,7 +8,7 @@
 
 // Imports
 import React, { useEffect } from "react";
-import { Container, Typography, Stack, Button } from "@mui/material";
+import { Container, Typography, Stack } from "@mui/material";
 import ReCAPTCHA from "react-google-recaptcha";
 import { usePlayer } from "@empirica/core/player/classic/react";
 
@@ -43,6 +43,8 @@ export default function Recaptcha({ next }) {
     if (sessionIdFromURL) {
       player.set("studyID", studyIdFromURL);
     }
+
+    window.scrollTo(0, 0);
   }, []);
 
   // UI
@@ -62,12 +64,15 @@ export default function Recaptcha({ next }) {
         <img src="assets/landing_page_2.svg" id="headerImg_recaptcha" />
         <div id="landing_container">
           <div id="landing_content">
-            <Typography variant="h1" sx={{fontSize: '2.5rem'}}>
+            <Typography variant="h1" sx={{ fontSize: "2.5rem" }}>
               Welcome to the
               <br />
               CMU Group Dynamics Study
             </Typography>
-            <Typography variant="body2" sx={{mb: '1em', mt: '1em', color: 'rgba(0,0,0,0.3)'}}>
+            <Typography
+              variant="body2"
+              sx={{ mb: "1em", mt: "1em", color: "rgba(0,0,0,0.3)" }}
+            >
               Version:&nbsp;
               {gameParams?.version
                 ? gameParams.version
@@ -76,7 +81,7 @@ export default function Recaptcha({ next }) {
                     month: "long",
                   })}
             </Typography>
-            <Typography variant="body1" sx={{mb: '1em', fontSize: '1em'}}>
+            <Typography variant="body1" sx={{ mb: "1em", fontSize: "1em" }}>
               <b>Complete the CAPTCHA below to get started.</b>
             </Typography>
             <ReCAPTCHA

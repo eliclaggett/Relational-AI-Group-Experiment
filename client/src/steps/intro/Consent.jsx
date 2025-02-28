@@ -7,11 +7,10 @@
  */
 
 // Imports
-import * as React from "react";
+import React, { useEffect } from "react";
 import {
   Alert,
   Button,
-  Card,
   Container,
   FormControl,
   FormLabel,
@@ -22,7 +21,6 @@ import {
   Paper,
   FormControlLabel,
 } from "@mui/material";
-import WarningIcon from "@mui/icons-material/Warning";
 import { usePlayer } from "@empirica/core/player/classic/react";
 import { useState } from "react";
 import { formatMoney } from "../../utils/formatting";
@@ -31,9 +29,14 @@ export default function Consent({ next }) {
   const player = usePlayer();
   const gameParams = player.get("gameParams");
   if (!gameParams) window.location.reload();
-
+  const passedConsentForm = player.get("passedConsentForm");
   // Logic to handle interactions with this page
-  const [radioButtonVals, setRadioButtonVals] = useState();
+  const [radioButtonVals, setRadioButtonVals] = useState({});
+  const [buttonDisabled, setButtonDisabled] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleRadioButtonChange = (evt) => {
     setRadioButtonVals((radioButtonVals) => ({
@@ -48,18 +51,43 @@ export default function Consent({ next }) {
 
   // Logic to move to next step or stop the experiment
   let nonconsentForm = "";
-  const passedConsentForm = player.get("passedConsentForm");
 
   if (passedConsentForm === false) {
     nonconsentForm = (
-      <Alert severity="error" variant="soft">
+      <Alert severity="error" variant="standard">
         We cannot continue without your consent. Please cancel your
         participation in this study if these terms cannot be met.
       </Alert>
     );
-  } else if (passedConsentForm === true) {
-    next();
   }
+
+  const consentQuestions = [];
+  for (const q in gameParams.consentQuestions) {
+    consentQuestions.push(
+      <FormControl key={q}>
+        <FormLabel>{gameParams.consentQuestions[q]}</FormLabel>
+        <RadioGroup name={q} onChange={handleRadioButtonChange}>
+          <FormControlLabel value="yes" control={<Radio />} label="Yes" />
+          <FormControlLabel value="no" control={<Radio />} label="No" />
+        </RadioGroup>
+      </FormControl>
+    );
+  }
+
+  useEffect(() => {
+    setButtonDisabled(false);
+    for (const q in gameParams.consentQuestions) {
+      if (!(q in radioButtonVals && radioButtonVals[q] == "yes")) {
+        setButtonDisabled(true);
+      }
+    }
+  }, [radioButtonVals]);
+
+  useEffect(() => {
+    if (passedConsentForm) {
+      next();
+    }
+  }, [passedConsentForm]);
 
   // UI
   return (
@@ -67,9 +95,9 @@ export default function Consent({ next }) {
       <Stack
         sx={{
           maxWidth: {
-            xs: '40rem',
-            md: '50rem',
-            lg: '70rem',
+            xs: "40rem",
+            md: "50rem",
+            lg: "70rem",
           },
           mx: "auto",
           mt: "10vh",
@@ -79,12 +107,20 @@ export default function Consent({ next }) {
       >
         <Typography variant="h1">Consent Form (STUDY2025_00000XXX)</Typography>
         <strong>
-          Please read the following information. After you give your consent, you
-          can proceed to the study.
+          Please read the following information. After you give your consent,
+          you can proceed to the study.
         </strong>
         <Paper
           variant="outlined"
-          sx={{ maxHeight: "30em", overflow: "scroll", p: 4, my: 2, display: 'flex', flexDirection: 'column', gap: 2 }}
+          sx={{
+            maxHeight: "30em",
+            overflow: "scroll",
+            p: 4,
+            my: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 2,
+          }}
         >
           <p>
             This game is part of a research study conducted by Carnegie Mellon
@@ -108,7 +144,7 @@ export default function Consent({ next }) {
             the task. After the tutorial, you will be asked a few questions
             about your understanding of the game. If you do not answer the
             questions correctly, you will still receive the base pay of{" "}
-            {formatMoney(gameParams.task1Pay)}, but you are not eligible to join
+            {formatMoney(gameParams.basePay)}, but you are not eligible to join
             the task and the HIT again.
           </p>
           <p>
@@ -150,12 +186,13 @@ export default function Consent({ next }) {
           <strong>Compensation & Costs</strong>
           <p>
             You will be compensated the base pay of{" "}
-            {formatMoney(gameParams.task1Pay)} for beginning the study and
+            {formatMoney(gameParams.basePay)} for beginning the study and
             completing the initial tutorial section. If you are deemed eligible
             to participate in the actual game (by answering the tutorial
             questions correctly), and you complete the game, you will also
-            receive a completion bonus of {formatMoney(gameParams.task2Pay)}. In
-            addition, those who participate in the game may earn a bonus up to
+            receive a completion bonus of up to{" "}
+            {formatMoney(gameParams.maxBonus)}. In addition, those who
+            participate in the game may earn a bonus up to
             {formatMoney(gameParams.bonus + gameParams.maxBonusShare * 2)} in a
             performance bonus based on the decisions they make while playing the
             game.
@@ -205,46 +242,15 @@ export default function Consent({ next }) {
             You may print a copy of this consent form for your records.
           </p>
         </Paper>
-        <FormControl>
-          <FormLabel>I am age 18 or older.</FormLabel>
-          <RadioGroup name="q1" onChange={handleRadioButtonChange}>
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-          </RadioGroup>
-        </FormControl>
-        <FormControl>
-          <FormLabel>
-            I have read and understand the information above.
-          </FormLabel>
-          <RadioGroup name="q2" onChange={handleRadioButtonChange}>
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-          </RadioGroup>
-        </FormControl>
-        <FormControl>
-          <FormLabel>
-            I have reviewed the eligibility requirements listed in the
-            Participant Requirements section of this consent form and certify
-            that I am eligible to participate in this research, to the best of
-            my knowledge.
-          </FormLabel>
-          <RadioGroup name="q3" onChange={handleRadioButtonChange}>
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-          </RadioGroup>
-        </FormControl>
-        <FormControl>
-          <FormLabel>
-            I want to participate in this research and continue with the game.
-          </FormLabel>
-          <RadioGroup name="q4" onChange={handleRadioButtonChange}>
-            <FormControlLabel value="yes" control={<Radio />} label="Yes" />
-            <FormControlLabel value="no" control={<Radio />} label="No" />
-          </RadioGroup>
-        </FormControl>
+        {consentQuestions}
         {nonconsentForm}
         <div>
-          <Button sx={{ my: 2 }} onClick={handleButtonClick} variant='contained'>
+          <Button
+            sx={{ my: 2 }}
+            onClick={handleButtonClick}
+            variant="contained"
+            disabled={buttonDisabled}
+          >
             Continue
           </Button>
         </div>

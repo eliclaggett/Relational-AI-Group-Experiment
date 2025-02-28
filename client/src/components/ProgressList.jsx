@@ -25,20 +25,22 @@ import { NavigateNext } from "@mui/icons-material";
 import "./ProgressList.scss";
 import { msToTime } from "../utils/formatting.js";
 
-export default function ProgressList({ items = [], active = "0" }) {
+export default function ProgressList({
+  items = [],
+  active = "0",
+  beforeStart = false,
+}) {
   const player = usePlayer();
   const game = useGame();
   const stage = useStage();
   const startedGame = game.get("started") || false;
-  const stageName = stage ? stage.get('name') : startedGame ? 'end' : 'intro';
+  const stageName = stage ? stage.get("name") : startedGame ? "end" : "intro";
   const stageTimer = useStageTimer();
-  const participantStep = player.get('step');
-  const gameParams = game.get('gameParams');
+  const participantStep = player.get("step");
+  const gameParams = game.get("gameParams");
 
   let lobbyTimeout = game.get("lobbyTimeout") || false;
-  const [lobbyTimeRemaining, setTimeRemaining] = useState(
-    "No time limit"
-  );
+  const [lobbyTimeRemaining, setTimeRemaining] = useState("No time limit");
 
   const timeLeft = stageTimer?.remaining ? stageTimer.remaining : 0;
   let timeLeftClass =
@@ -46,16 +48,23 @@ export default function ProgressList({ items = [], active = "0" }) {
   if (timeLeft <= 0) {
     timeLeftClass = "";
   }
-  let timeRemaining = msToTime(stageTimer?.remaining ? stageTimer.remaining : 0);
-  let remainingTxt = 'until next task';
-  if (stageName == 'summary-task') {
-    remainingTxt = 'until study ends';
-  } else if (stageName == 'intro') {
-    remainingTxt = 'until study starts';
+  let timeRemaining = msToTime(
+    stageTimer?.remaining ? stageTimer.remaining : 0
+  );
+  let remainingTxt = "until next task";
+  if (stageName == "summary-task") {
+    remainingTxt = "until study ends";
+  } else if (stageName == "intro") {
+    remainingTxt = "until study starts";
     timeRemaining = lobbyTimeRemaining;
-  } else if (stageName == 'end') {
-    remainingTxt = 'Study complete';
-    timeRemaining = '';
+  } else if (stageName == "end") {
+    remainingTxt = "Study complete";
+    timeRemaining = "";
+  }
+
+  if (player.get('ended')) {
+    remainingTxt = "Study ended";
+    timeRemaining = "";
   }
 
   // Run on component load
@@ -78,15 +87,21 @@ export default function ProgressList({ items = [], active = "0" }) {
       }, 1000);
       return () => clearInterval(interval);
     } else {
-
     }
-    
   }, [startedGame, lobbyTimeout]);
 
   let listItemUI = [];
   let itemIdx = 0;
   for (const item of items) {
     itemIdx++;
+    const numberUI = beforeStart ? (
+      ""
+    ) : (
+      <div className="number">
+        <span>{itemIdx}</span>
+        <NavigateNext />
+      </div>
+    );
     const isActive = active + 1 == itemIdx ? "active" : "";
     listItemUI.push(
       <Stack
@@ -94,10 +109,7 @@ export default function ProgressList({ items = [], active = "0" }) {
         key={item["name"]}
         direction="row"
       >
-        <div className="number">
-          <span>{itemIdx}</span>
-          <NavigateNext />
-        </div>
+        {numberUI}
         <Stack direction="column" className="progressListDesc">
           <strong>{item["name"]}</strong>
           <span>{item["time"]}</span>
@@ -115,14 +127,16 @@ export default function ProgressList({ items = [], active = "0" }) {
         alignItems: "center",
         mt: "1rem",
         mb: "1rem",
-        fontSize: '0.9rem'
+        fontSize: "0.9rem",
       }}
     >
       {listItemUI}
       <div className="vert-divider"></div>
       <div className={"timeLeft-txt " + timeLeftClass}>
-        {!startedGame || stageName == 'end' ? timeRemaining : msToTime(timeLeft)}
-        {stageName != 'end' ? <br/> : ''}
+        {!startedGame || stageName == "end"
+          ? timeRemaining
+          : msToTime(timeLeft)}
+        {stageName != "end" ? <br /> : ""}
         {remainingTxt}
       </div>
     </Stack>

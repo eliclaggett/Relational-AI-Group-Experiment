@@ -1,0 +1,8 @@
+factors:
+    - name: playerCount
+      values:
+        - value: 999
+treatments:
+    - name: Control
+      factors:
+        playerCount: 999

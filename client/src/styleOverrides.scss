@@ -1,3 +1,7 @@
+// GENERAL
+.MuiRadioGroup-root {
+    margin-left: -0.6em;
+}
 // Recaptcha.jsx
 
 #headerImg_recaptcha {
@@ -26,7 +30,12 @@
     margin: 0;
     padding: 0;
 }
+// Tutorial.jsx
 
+#tutorialTips .MuiPaper-root {
+    margin-bottom: 1.5em;
+    margin-top: 1.5em;
+}
 // Survey.jsx
 .surveyQ {
     margin-top: 4rem;
@@ -67,6 +76,9 @@
     margin: 0!important;
     padding: 0 0 1em 0!important;
 }
+#chatWindow-sm .chatRoom .msgLeft, #chatWindow-sm .chatRoom .msgRight {
+    padding-top: 2em !important;
+}
 .chatWindow-sm div {
     margin: 1em !important;
     padding: 0.7em !important;
@@ -101,4 +113,15 @@
     background: rgba(0,0,0,0.2);
     height: 3em;
     margin: 0 1em;
+}
+
+// Summary.jsx
+.MuiTypography-root .MuiListItemAvatar-root {
+    display: inline-block;
+}
+.MuiTypography-root .MuiListItemAvatar-root .MuiAvatar-root {
+    display: inline-block;
+    vertical-align: middle;
+    height: 1.2em;
+    width: 1.2em;
 }

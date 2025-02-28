@@ -21,16 +21,20 @@ const theme = createTheme({
   typography: {
     fontFamily: 'Noto Sans, Arial',
     h1: {
-      fontSize: '2rem'
+      fontSize: '2rem',
+      fontWeight: 'bold'
     },
     h2: {
-      fontSize: '1.5rem'
+      fontSize: '1.5rem',
+      fontWeight: 'bold'
     },
     h3: {
-      fontSize: '1.25rem'
+      fontSize: '1.25rem',
+      fontWeight: 'bold'
     },
     h4: {
-      fontSize: '1.1rem'
+      fontSize: '1.1rem',
+      fontWeight: 'bold'
     }
   },
   components: {

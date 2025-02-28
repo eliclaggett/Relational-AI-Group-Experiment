@@ -9,18 +9,18 @@
 // Imports
 import { usePlayer } from "@empirica/core/player/classic/react";
 import { Avatar, Button, IconButton, Stack } from "@mui/material";
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 
-export default function IdentitySelect({next}) {
+export default function IdentitySelect({ next }) {
   // Useful variables
   const player = usePlayer();
-  const animalOptions = player.get('animalOptions') || [];
-  const color = player.get('color');
-  const selfIdentity = player.get('selfIdentity') || '';
-  let disabled = selfIdentity == '';
+  const animalOptions = player.get("animalOptions") || [];
+  const color = player.get("color");
+  const selfIdentity = player.get("selfIdentity") || "";
+  let disabled = selfIdentity == "";
 
   function selectIdentity(animal) {
-    player.set('selfIdentity', animal);
+    player.set("selfIdentity", animal);
   }
 
   function continueToChat() {
@@ -30,7 +30,16 @@ export default function IdentitySelect({next}) {
   function generateAnimalList(animals) {
     return animals.map((animal) => {
       return (
-        <Stack direction={"column"} alignItems={"center"} className={selfIdentity == animal ? 'identityChooser active' :'identityChooser'} key={animal}>
+        <Stack
+          direction={"column"}
+          alignItems={"center"}
+          className={
+            selfIdentity == animal
+              ? "identityChooser active"
+              : "identityChooser"
+          }
+          key={animal}
+        >
           <IconButton onClick={() => selectIdentity(animal)}>
             <Avatar
               alt={animal}
@@ -43,7 +52,7 @@ export default function IdentitySelect({next}) {
       );
     });
   }
-  
+
   return (
     <>
       <Stack
@@ -60,7 +69,9 @@ export default function IdentitySelect({next}) {
         <Stack direction={"row"} gap={2}>
           {generateAnimalList(animalOptions)}
         </Stack>
-        <Button variant="outlined" disabled={disabled} onClick={continueToChat}>Continue</Button>
+        <Button variant="outlined" disabled={disabled} onClick={continueToChat}>
+          Continue
+        </Button>
       </Stack>
     </>
   );

@@ -11,15 +11,13 @@ import React, { useState, useEffect } from "react";
 import {
   Button,
   FormControl,
-  FormLabel,
-  Input,
   Container,
   Typography,
   Stack,
-  TextField
+  TextField,
 } from "@mui/material";
 
-export default function Join({ onPlayerID, connecting }) {
+export default function Join({ onPlayerID }) {
   // For the text input field.
   const [playerID, setPlayerID] = useState("");
 
@@ -56,7 +54,7 @@ export default function Join({ onPlayerID, connecting }) {
           mt: "10rem",
           textAlign: "center",
         }}
-        gap={1}
+        gap={3}
       >
         {/* <img src="images/undraw_chatting_re_j55r.svg" id="headerImg_recaptcha" /> */}
         <Typography variant="h1">Getting your Prolific ID...</Typography>
