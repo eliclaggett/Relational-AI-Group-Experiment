@@ -6,6 +6,7 @@ import findConfig from "find-config";
 import OpenAI from "openai";
 const openai = new OpenAI();
 import { shuffle, calculateEntropyFromData } from "./utils.js";
+import { parseAIResponse } from "./parseresponse";
 export const Empirica = new ClassicListenersCollector();
 
 let discussionMinutesElapsed = 0;
@@ -514,50 +515,153 @@ Empirica.on(
         "having stricter immigration requirements into the U.S.",
       ];
 
-      const viewingRoom = player.get("viewingRoom");
-      const msgs = player.currentGame.get("chatChannel-" + viewingRoom);
-      let chatLog = "";
-      for (const msg of msgs) {
-        if (msg.sender == -2) {
-          chatLog += "YOU: " + msg.content;
-        } else if (msg.sender == -1) {
-          chatLog += "MODERATOR: " + msg.content;
-        } else {
-          chatLog += "PARTNER: " + msg.content;
-        }
-      }
+      let prompt = '';
+      let game_topic = topics[parseInt(player.currentGame.get("topic"))];
+      let activeRoom = player.get("activeRoom");
+      let previous_convo = player.currentGame.get("chatChannel-"+activeRoom);
+      let PID = player.get('participantIdx');
+      let opinion = player.get('surveyAnswers')[game_topic];
 
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
+      let chatLog = "";
+      for (const msg of previous_convo) {
+        chatLog += `${msg.sender}: ${msg.content}\n`;
+      }
+      
+      if (gameParams.condition == 'control')
+      {
+        // no completion needed
+      }
+      else if (gameParams.condition == 'personal')
+      {
+        prompt = [
           {
             role: "system",
             content:
-              'Your task is to simulate the user labeled "YOU" in the conversations shown to you. Make your replies consistent with the emotional state of the person you\'re simulating and their attitude toward their conversation partner.',
+              'Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.',
           },
           {
             role: "user",
             content:
-              'Continue the discussion as the person labeled "YOU" in a text message chat about ' +
-              topics[parseInt(player.currentGame.get("topic"))] +
-              '. If your partner says something interesting or unclear, consider asking them to elaborate. Here are the last few messages of the discussion:\n\n"' +
-              chatLog +
-              '"\n\nReply to the last message sent by PARTNER. Do not respond to the person labeled MODERATOR. Since you and your partner may have different ideologies, be positive, use perspective-sharing, humanization, and conversational receptiveness to build rapport with your partner even though they might disagree with you. DO NOT WRITE MORE THAN 10 WORDS!',
-          },
-        ],
-        store: false,
-      });
+            `Topic of conversation: ${game_topic}
+            Previous Conversation: ${chatLog}
 
-      let reply = completion.choices[0].message["content"];
-      if (reply.slice(0, 3) == "YOU") {
-        reply = reply.slice(4);
+            Now suggest a message response for ${PID}$ who rated the discussion topic ${opinion}. 
+            Try to keep the suggestion as short as possible.
+            Pay heed to the participant's previous message style and word structure so it feels adapted to them.
+            You must follow the standard of casual conversations -- so that it is not too wordy and formal.
+            Do NOT make the suggestions too long (1/2 sentences at max). 
+
+            Your response must follow the JSON format: 
+            {"SuggestionReasoning": Your reasoning, "Suggestion": {your suggestion for ${PID}$} } }`,
+          },
+        ];
+      }
+      else if (gameParams.condition == 'relational-static')
+      {
+        let group_opinion = player.currentGame.players
+            .filter((p) => p.get('activeRoom') == player.get('activeRoom'))
+            .map((p) => `${p.get('participantIdx')}: ${p.get('surveyAnswers')[game_topic]}`)
+            .join(', ');
+
+        prompt = [
+          {
+            role: "system",
+            content:
+              'Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.',
+          },
+          {
+            role: "user",
+            content:
+            `Topic of conversation: ${game_topic}
+            Participants: ${group_opinion}
+            Previous Conversation: ${chatLog}
+
+            Rate the above conversation based on the following metrics: Tone (Pro/Against/Neutral), Respectfulness (0-5), Cooperativeness (0-5), and Social Awareness (0-5).
+            
+            Now suggest a message response for ${PID}$ so that the group is not polarized and respects others' opinions.
+            Apply principles of Cognitive dissonance theory to come up with your suggestions.
+            Try to keep the suggestion as short as possible.
+            Pay heed to the participant's previous message style and word structure so it feels adapted to them.
+            You must follow the standard of casual conversations -- so that it is not too wordy and formal.
+            Do NOT make the suggestions too long (1/2 sentences at max). 
+
+            Your response must follow the JSON format: 
+            { "Rate": {"Tone": ..., "Respectfulness": ..., .... }, 
+            "SuggestionReasoning": Your reasoning based on Cognitive Dissonance Theory, 
+            "Suggestion": {your suggestion for ${PID}$} } }
+            `,
+          },
+        ];
+      }
+      else if (gameParams.condition == 'relational-dynamic')
+      {
+        let group_opinion = player.currentGame.players
+            .filter((p) => p.get('activeRoom') == player.get('activeRoom'))
+            .map((p) => `${p.get('participantIdx')}: ${p.get('surveyAnswers')[game_topic]}`)
+            .join(', ');
+
+        let prev_opinion = player.currentGame.players
+            .filter((p) => p.get('joinedRooms').includes(player.get('activeRoom')) && p.get('activeRoom') != player.get('activeRoom'))
+            .map((p) => `${p.get('participantIdx')}: ${p.get('surveyAnswers')[game_topic]}`)
+            .join(', ');
+
+        prompt = [
+          {
+            role: "system",
+            content:
+              'Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.',
+          },
+          {
+            role: "user",
+            content:
+            `Topic of conversation: ${game_topic}
+            Current Participants: ${group_opinion}
+            Previous Participants who have left the conversation (if any): ${prev_opinion}
+            Previous Conversation: ${chatLog}
+
+            Rate the above conversation based on the following metrics: Tone (Pro/Against/Neutral), Respectfulness (0-5), Cooperativeness (0-5), and Social Awareness (0-5).
+            
+            Now suggest a message response for ${PID}$ so that the group is not polarized and respects others' opinions.
+            You can pay attention to who has left the conversation and their previous messages as well to understand why they left and if you can prevent such abrupt leaving from happening again.
+            Apply principles of Cognitive dissonance theory to come up with your suggestions.
+            Try to keep the suggestion as short as possible.
+            Pay heed to the participant's previous message style and word structure so it feels adapted to them.
+            You must follow the standard of casual conversations -- so that it is not too wordy and formal.
+            Do NOT make the suggestions too long (1/2 sentences at max). 
+
+            Your response must follow the JSON format: 
+            { "Rate": {"Tone": ..., "Respectfulness": ..., .... }, 
+            "SuggestionReasoning": Your reasoning based on Cognitive Dissonance Theory, 
+            "Suggestion": {your suggestion for ${PID}$} } }
+            `,
+          },
+        ];
       }
 
-      player.set("suggestedReply", {
-        id: requestAIAssistance.id + 1,
-        content: reply,
-      });
-    }
+      if (prompt !== '')
+      {
+          try {
+              const completion = await openai.chat.completions.create({
+                  model: "gpt-4",
+                  messages: prompt,
+                  store: false,
+              });
+
+              let reply = completion.choices[0].message["content"];
+              let parsed_reply = parseAIResponse(reply);
+
+              player.set("suggestedReply", {
+                  id: requestAIAssistance.id + 1,
+                  content: parsed_reply.Suggestion,
+              });
+          } catch (error) {
+              console.error("Error getting AI assistance:", error);
+              player.set("suggestedReply", {
+                  id: requestAIAssistance.id + 1,
+                  content: "I apologize, but I'm having trouble generating a suggestion right now. Please try again.",
+              });
+          }
+      }
   }
 );
 
