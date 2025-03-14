@@ -148,6 +148,7 @@ export default function Tutorial({ next }) {
   }
 
   useEffect(() => {
+    document.querySelector("h1").scrollIntoView();
     if (step == 4 && !passedTutorialMessage) {
       setNextButtonDisabled(true);
     } else if (step == 4 && passedTutorialMessage) {

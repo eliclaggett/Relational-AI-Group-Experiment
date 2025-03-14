@@ -197,12 +197,7 @@ const initialGroupsBySampleSize = {
 const targetParticipantsPerGroup = 3;
 
 const botTexts = JSON.parse(
-  fs.readFileSync(
-    process.env["EXPERIMENT_DIR"] +
-      "/" +
-      process.env["EXPERIMENT_NAME"] +
-      "/texts.json"
-  )
+  fs.readFileSync(process.env["EXPERIMENT_DIR"] + "/" + "/texts.json")
 );
 
 const gameParams = {
@@ -219,14 +214,15 @@ const gameParams = {
   bonusPerParticipant: 1,
   maxBonus: 5,
   maxWaitTime: 5,
-  inactivityMax: 180, // seconds
+  inactivityMax: 150, // seconds
   inactivityWarning: 120, // seconds
 
   chatTime: 15,
   lobbyTime: 5,
   summaryTime: 5,
-  followupDelay1: 2,
-  followupDelay2: 2,
+  followupDelay1: 2, // Send a followup message 2 minutes after the chat starts
+  followupDelay2: 2, // Send another followup 2 minutes after the previous followup
+  switchRoomDelay: 6, // Send a suggestion to switch rooms 6 minutes after the chat starts
 
   consentQuestions: {
     q1: "I am age 18 or older.",
@@ -440,17 +436,40 @@ Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
     minutePassed++
   ) {
     let nextPrompt = "";
-    // Add moderator messages to the new chat room
     if (minutePassed == gameParams["followupDelay1"]) {
       nextPrompt = prompts["prompt2"][topic];
-    } else if (
+      const msgs = player.currentGame.get("chatChannel-" + roomCounter) || [];
+
+      player.currentGame.set("chatChannel-" + roomCounter, [
+        ...msgs,
+        {
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: nextPrompt,
+        },
+      ]);
+    }
+
+    if (
       minutePassed ==
       gameParams["followupDelay1"] + gameParams["followupDelay2"]
     ) {
       nextPrompt = prompts["prompt3"][topic];
+      const msgs = player.currentGame.get("chatChannel-" + roomCounter) || [];
+
+      player.currentGame.set("chatChannel-" + roomCounter, [
+        ...msgs,
+        {
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: nextPrompt,
+        },
+      ]);
     }
 
-    if (nextPrompt.length > 0) {
+    if (minutePassed == gameParams["switchRoomDelay"]) {
+      nextPrompt =
+        "(Reminder) You can check out other chat rooms at any time and switch to whichever you feel most comfortable in! If you switch, please introduce yourself and add on to the discussion.";
       const msgs = player.currentGame.get("chatChannel-" + roomCounter) || [];
 
       player.currentGame.set("chatChannel-" + roomCounter, [
@@ -464,7 +483,6 @@ Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
     }
   }
 
-  // TODO: Add messages from bot moderator
   roomCounter += 1;
 });
 
@@ -515,34 +533,30 @@ Empirica.on(
         "having stricter immigration requirements into the U.S.",
       ];
 
-      let prompt = '';
+      let prompt = "";
       let game_topic = topics[parseInt(player.currentGame.get("topic"))];
       let activeRoom = player.get("activeRoom");
-      let previous_convo = player.currentGame.get("chatChannel-"+activeRoom);
-      let PID = player.get('participantIdx');
-      let opinion = player.get('surveyAnswers')[game_topic];
+      let previous_convo = player.currentGame.get("chatChannel-" + activeRoom);
+      let PID = player.get("participantIdx");
+      let opinion = player.get("surveyAnswers")[game_topic];
 
       let chatLog = "";
       for (const msg of previous_convo) {
         chatLog += `${msg.sender}: ${msg.content}\n`;
       }
-      
-      if (gameParams.condition == 'control')
-      {
+
+      if (gameParams.condition == "control") {
         // no completion needed
-      }
-      else if (gameParams.condition == 'personal')
-      {
+      } else if (gameParams.condition == "personal") {
         prompt = [
           {
             role: "system",
             content:
-              'Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.',
+              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
           },
           {
             role: "user",
-            content:
-            `Topic of conversation: ${game_topic}
+            content: `Topic of conversation: ${game_topic}
             Previous Conversation: ${chatLog}
 
             Now suggest a message response for ${PID}$ who rated the discussion topic ${opinion}. 
@@ -555,24 +569,26 @@ Empirica.on(
             {"SuggestionReasoning": Your reasoning, "Suggestion": {your suggestion for ${PID}$} } }`,
           },
         ];
-      }
-      else if (gameParams.condition == 'relational-static')
-      {
+      } else if (gameParams.condition == "relational-static") {
         let group_opinion = player.currentGame.players
-            .filter((p) => p.get('activeRoom') == player.get('activeRoom'))
-            .map((p) => `${p.get('participantIdx')}: ${p.get('surveyAnswers')[game_topic]}`)
-            .join(', ');
+          .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
+          .map(
+            (p) =>
+              `${p.get("participantIdx")}: ${
+                p.get("surveyAnswers")[game_topic]
+              }`
+          )
+          .join(", ");
 
         prompt = [
           {
             role: "system",
             content:
-              'Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.',
+              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
           },
           {
             role: "user",
-            content:
-            `Topic of conversation: ${game_topic}
+            content: `Topic of conversation: ${game_topic}
             Participants: ${group_opinion}
             Previous Conversation: ${chatLog}
 
@@ -592,29 +608,40 @@ Empirica.on(
             `,
           },
         ];
-      }
-      else if (gameParams.condition == 'relational-dynamic')
-      {
+      } else if (gameParams.condition == "relational-dynamic") {
         let group_opinion = player.currentGame.players
-            .filter((p) => p.get('activeRoom') == player.get('activeRoom'))
-            .map((p) => `${p.get('participantIdx')}: ${p.get('surveyAnswers')[game_topic]}`)
-            .join(', ');
+          .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
+          .map(
+            (p) =>
+              `${p.get("participantIdx")}: ${
+                p.get("surveyAnswers")[game_topic]
+              }`
+          )
+          .join(", ");
 
         let prev_opinion = player.currentGame.players
-            .filter((p) => p.get('joinedRooms').includes(player.get('activeRoom')) && p.get('activeRoom') != player.get('activeRoom'))
-            .map((p) => `${p.get('participantIdx')}: ${p.get('surveyAnswers')[game_topic]}`)
-            .join(', ');
+          .filter(
+            (p) =>
+              p.get("joinedRooms").includes(player.get("activeRoom")) &&
+              p.get("activeRoom") != player.get("activeRoom")
+          )
+          .map(
+            (p) =>
+              `${p.get("participantIdx")}: ${
+                p.get("surveyAnswers")[game_topic]
+              }`
+          )
+          .join(", ");
 
         prompt = [
           {
             role: "system",
             content:
-              'Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.',
+              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
           },
           {
             role: "user",
-            content:
-            `Topic of conversation: ${game_topic}
+            content: `Topic of conversation: ${game_topic}
             Current Participants: ${group_opinion}
             Previous Participants who have left the conversation (if any): ${prev_opinion}
             Previous Conversation: ${chatLog}
@@ -638,30 +665,31 @@ Empirica.on(
         ];
       }
 
-      if (prompt !== '')
-      {
-          try {
-              const completion = await openai.chat.completions.create({
-                  model: "gpt-4",
-                  messages: prompt,
-                  store: false,
-              });
+      if (prompt !== "") {
+        try {
+          const completion = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
+            messages: prompt,
+            store: false,
+          });
 
-              let reply = completion.choices[0].message["content"];
-              let parsed_reply = parseAIResponse(reply);
+          let reply = completion.choices[0].message["content"];
+          let parsed_reply = parseAIResponse(reply);
 
-              player.set("suggestedReply", {
-                  id: requestAIAssistance.id + 1,
-                  content: parsed_reply.Suggestion,
-              });
-          } catch (error) {
-              console.error("Error getting AI assistance:", error);
-              player.set("suggestedReply", {
-                  id: requestAIAssistance.id + 1,
-                  content: "I apologize, but I'm having trouble generating a suggestion right now. Please try again.",
-              });
-          }
+          player.set("suggestedReply", {
+            id: requestAIAssistance.id + 1,
+            content: parsed_reply.Suggestion,
+          });
+        } catch (error) {
+          console.error("Error getting AI assistance:", error);
+          player.set("suggestedReply", {
+            id: requestAIAssistance.id + 1,
+            content:
+              "I apologize, but I'm having trouble generating a suggestion right now. Please try again.",
+          });
+        }
       }
+    }
   }
 );
 
@@ -808,17 +836,44 @@ Empirica.onStageStart(({ stage }) => {
         // If an early finish is requested, we break out of the schedule
         if (discussionMinutesElapsed == gameParams["followupDelay1"]) {
           nextPrompt = prompts["prompt2"][topic];
-        } else if (
+          const msgs =
+            player.currentGame.get("chatChannel-" + roomCounter) || [];
+
+          player.currentGame.set("chatChannel-" + roomCounter, [
+            ...msgs,
+            {
+              sender: "-1",
+              dt: new Date().getTime(),
+              content: nextPrompt,
+            },
+          ]);
+        }
+
+        if (
           discussionMinutesElapsed ==
           gameParams["followupDelay1"] + gameParams["followupDelay2"]
         ) {
           nextPrompt = prompts["prompt3"][topic];
+          const msgs =
+            player.currentGame.get("chatChannel-" + roomCounter) || [];
+
+          player.currentGame.set("chatChannel-" + roomCounter, [
+            ...msgs,
+            {
+              sender: "-1",
+              dt: new Date().getTime(),
+              content: nextPrompt,
+            },
+          ]);
         }
 
-        if (nextPrompt.length > 0) {
-          const msgs = stage.currentGame.get("chatChannel-" + k) || [];
+        if (discussionMinutesElapsed == gameParams["switchRoomDelay"]) {
+          nextPrompt =
+            "(Reminder) You can check out other chat rooms at any time and switch to whichever you feel most comfortable in! If you switch, please introduce yourself and add on to the discussion.";
+          const msgs =
+            player.currentGame.get("chatChannel-" + roomCounter) || [];
 
-          stage.currentGame.set("chatChannel-" + k, [
+          player.currentGame.set("chatChannel-" + roomCounter, [
             ...msgs,
             {
               sender: "-1",

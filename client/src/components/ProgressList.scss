@@ -1,22 +1,24 @@
 .progressListItem {
-    align-items: center;
-    opacity: 0.3;
+  align-items: center;
+  opacity: 0.3;
 }
 .progressListItem.active {
-    opacity: 1;
+  opacity: 1;
 }
 .progressListItem:not(:last-child) {
-    margin-right: 1em;
+  margin-right: 1em;
 }
 .progressListItem .number {
-    font-size: 2em;
-    vertical-align: middle;
+  font-size: 2em;
+  vertical-align: middle;
+  min-width: 3rem;
 }
 .progressListItem .number svg {
-    font-size: 1.5em;
-    margin-left: -0.3em;
+  font-size: 1.5em;
+  margin-left: -0.3em;
 }
 
-.progressListItem .MuiStack-root strong, .progressListItem .MuiStack-root span {
-    line-height: 1.2em;
+.progressListItem .MuiStack-root strong,
+.progressListItem .MuiStack-root span {
+  line-height: 1.2em;
 }

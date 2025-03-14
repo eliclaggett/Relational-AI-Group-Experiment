@@ -20,7 +20,7 @@
 #       - DEPLOYMENT (dev or prod)
 #       - PORT_EMPIRICA (e.g. 9600)
 #       - PORT_PYTHON (e.g. 9601)
-#       - STORE_PATH (full path for the location that tajriba.json should be stored, e.g., /home/ubuntu/{user}/data)
+#       - DATA_DIR (full path for the location that tajriba.json should be stored, e.g., /home/ubuntu/{user}/data)
 #       - VENV (pyenv virtualenv name)
 #
 ################################################################################
@@ -40,7 +40,7 @@ if which pyenv-virtualenv-init > /dev/null; then eval "$(pyenv virtualenv-init -
 rm .empirica/local/tajriba.json
 
 # Run Empirica
-{ empirica & }
+{ empirica -s ":9901" & }
 pid1=$!
 echo $pid1 >> RUNNING_PID
 

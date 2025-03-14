@@ -11,42 +11,42 @@ import Consent from "./steps/intro/Consent.jsx";
 import Lobby from "./steps/intro/Lobby.jsx";
 import Tutorial from "./steps/intro/Tutorial.jsx";
 import Survey from "./steps/intro/Survey.jsx";
-import './styleOverrides.scss';
+import "./styleOverrides.scss";
 import End from "./steps/exit/End.jsx";
 
 const theme = createTheme({
   palette: {
-    primary: {main: '#e663bd'}
+    primary: { main: "#e663bd" },
   },
   typography: {
-    fontFamily: 'Noto Sans, Arial',
+    fontFamily: "Noto Sans, Arial",
     h1: {
-      fontSize: '2rem',
-      fontWeight: 'bold'
+      fontSize: "2rem",
+      fontWeight: "bold",
     },
     h2: {
-      fontSize: '1.5rem',
-      fontWeight: 'bold'
+      fontSize: "1.5rem",
+      fontWeight: "bold",
     },
     h3: {
-      fontSize: '1.25rem',
-      fontWeight: 'bold'
+      fontSize: "1.25rem",
+      fontWeight: "bold",
     },
     h4: {
-      fontSize: '1.1rem',
-      fontWeight: 'bold'
-    }
+      fontSize: "1.1rem",
+      fontWeight: "bold",
+    },
   },
   components: {
     MuiFormLabel: {
       styleOverrides: {
         root: {
-          color: 'black',
-          fontWeight: 'bold'
-        }
-      }
-    }
-  }
+          color: "black",
+          fontWeight: "bold",
+        },
+      },
+    },
+  },
 });
 
 export default function App() {
@@ -57,11 +57,7 @@ export default function App() {
   const url = `${protocol}//${host}/query`;
 
   function introSteps({ game, player }) {
-    return [
-      Recaptcha,
-      Consent,
-      Tutorial,
-      Survey];
+    return [Recaptcha, Consent, Tutorial, Survey];
   }
 
   function exitSteps({ game, player }) {
@@ -73,9 +69,14 @@ export default function App() {
       <div className="h-screen relative">
         <EmpiricaMenu position="bottom-left" />
         <div className="h-full overflow-auto">
-        <ThemeProvider theme={theme}>
+          <ThemeProvider theme={theme}>
             <CssBaseline />
-            <EmpiricaContext introSteps={introSteps} exitSteps={exitSteps} lobby={Lobby} playerCreate={Join}>
+            <EmpiricaContext
+              introSteps={introSteps}
+              exitSteps={exitSteps}
+              lobby={Lobby}
+              playerCreate={Join}
+            >
               <Game />
             </EmpiricaContext>
           </ThemeProvider>

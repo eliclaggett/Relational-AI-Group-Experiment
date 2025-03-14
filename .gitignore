@@ -9,3 +9,4 @@ package-lock.json
 *.tar.gz
 *.tar.zst
 *.pem
+log*

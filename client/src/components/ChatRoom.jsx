@@ -120,12 +120,14 @@ export default function ChatRoom({}) {
 
   useEffect(() => {
     setReceivedCompletion(false);
-    // // Request AI assistance for every new message
-    // console.log('received message');
-    // if (stageName == 'group-discussion' && messages[messages.length - 1].sender != participantIdx) {
-    //   console.log('requesting assistance');
-    //   player.set("requestAIAssistance", { id: player.get("gtID") + 1 });
-    // }
+    // Request AI assistance for every new message
+    if (
+      stageName == "group-discussion" &&
+      messages[messages.length - 1].sender != participantIdx
+    ) {
+      console.log("requesting assistance");
+      player.set("requestAIAssistance", { id: player.get("gtID") + 1 });
+    }
   }, [messages]);
 
   useEffect(() => {

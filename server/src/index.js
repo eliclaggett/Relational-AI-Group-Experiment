@@ -14,9 +14,14 @@ const argv = minimist(process.argv.slice(2), { string: ["token"] });
 
 setLogLevel(argv["loglevel"] || "info");
 
+const websocketURL =
+  process.env["DEPLOYMENT"] == "prod"
+    ? "http://localhost:" + process.env["PORT_EMPIRICA"] + "/query"
+    : "http://localhost:" + process.env["PORT_EMPIRICA"] + "/query";
+
 (async () => {
   const ctx = await AdminContext.init(
-    argv["url"] || "http://localhost:3000/query",
+    argv["url"] || websocketURL,
     argv["sessionTokenPath"],
     "callbacks",
     argv["token"],
