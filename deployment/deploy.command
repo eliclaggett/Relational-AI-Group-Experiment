@@ -24,8 +24,10 @@ tput sc
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")/../" ; pwd -P )
 cd "$parent_path"
 
-# Load dotenv
-export $(cat .env | xargs)
+# Load dotenv and ensure proper export
+set -a
+source .env
+set +a
 
 empirica bundle
 
@@ -33,11 +35,11 @@ echo $SERVER_SSH;
 echo $PROD_EXPERIMENT_DIR;
 
 sftp -b - -i deployment/server.pem $SERVER_SSH <<EOF
-	put -r "$parent_path/$EXPERIMENT_NAME.tar.zst" "$PROD_EXPERIMENT_DIR"
-	put "$parent_path/start.sh" "$PROD_EXPERIMENT_DIR/start.sh"
-	put "$parent_path/.env_prod" "$PROD_EXPERIMENT_DIR/.env"
-	put "$parent_path/texts.json" "$PROD_EXPERIMENT_DIR/texts.json"
-	exit
+    put -r "$parent_path/$EXPERIMENT_NAME.tar.zst" "$PROD_EXPERIMENT_DIR"
+    put "$parent_path/start.sh" "$PROD_EXPERIMENT_DIR/start.sh"
+    put "$parent_path/.env_prod" "$PROD_EXPERIMENT_DIR/.env"
+    put "$parent_path/texts.json" "$PROD_EXPERIMENT_DIR/texts.json"
+    exit
 EOF
 
 tput rc

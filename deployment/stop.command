@@ -15,7 +15,9 @@ parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")/../" ; pwd -P )
 cd "$parent_path"
 
 # Load dotenv
-export $(cat .env | xargs)
+set -a
+source .env
+set +a
 
 ssh -i deployment/server.pem $SERVER_SSH bash << HERE
  cd $PROD_EXPERIMENT_DIR
