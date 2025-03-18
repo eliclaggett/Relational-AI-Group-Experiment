@@ -717,15 +717,15 @@ Empirica.onGameStart(({ game }) => {
 
   // Get participants who passed all preceding steps
 
-  const waitingPlayers = game.players.filter((p) => p.get("surveyAnswers"));
-  const notReadyPlayers = game.players.filter((p) => p.get("surveyAnswers"));
+  // const waitingPlayers = game.players.filter((p) => p.get("surveyAnswers"));
+  // const notReadyPlayers = game.players.filter((p) => !p.get("surveyAnswers"));
 
-  for (const player of notReadyPlayers) {
-    player.set("ended", true);
-    player.set("endReason", "not-reach-lobby");
-  }
+  // for (const player of notReadyPlayers) {
+  //   player.set("ended", true);
+  //   player.set("endReason", "not-reach-lobby");
+  // }
 
-  for (const player of waitingPlayers) {
+  for (const player of game.players) {
     player.set("step", "ready");
   }
 });
