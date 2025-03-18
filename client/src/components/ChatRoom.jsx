@@ -445,7 +445,9 @@ export default function ChatRoom({}) {
           }}
         >
           <div className="suggestion" onClick={handleCopySuggestion}>
-            {suggestion.content}
+            {typeof suggestion.content == "object"
+              ? JSON.stringify(suggestion.content)
+              : suggestion.content}
           </div>
           <span>
             <IconButton
