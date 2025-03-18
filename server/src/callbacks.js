@@ -281,6 +281,7 @@ Empirica.on("player", (ctx, { player, _ }) => {
   player.set("playerCounter", playerCounter);
   player.set("color", colors[playerCounter]);
   player.set("lastRequestID", -1);
+  player.set("gtID", 0);
   player.set(
     "animalOptions",
     animals.slice(playerCounter * 3, playerCounter * 3 + 3)
@@ -522,41 +523,40 @@ Empirica.on(
   "player",
   "requestAIAssistance",
   async (_, { player, requestAIAssistance }) => {
-    if (requestAIAssistance.id > -1) {
-      const topics = [
-        "evolution being taught as a fact of biology",
-        "protecting the second amendment right to bear arms",
-        "funding the military",
-        "the idea that children are being indoctrinated at school with LGBT messaging",
-        "paying higher taxes to support climate change research",
-        "the idea that COVID-19 restrictions went too far",
-        "having stricter immigration requirements into the U.S.",
-      ];
+    const topics = [
+      "evolution being taught as a fact of biology",
+      "protecting the second amendment right to bear arms",
+      "funding the military",
+      "the idea that children are being indoctrinated at school with LGBT messaging",
+      "paying higher taxes to support climate change research",
+      "the idea that COVID-19 restrictions went too far",
+      "having stricter immigration requirements into the U.S.",
+    ];
 
-      let prompt = "";
-      let game_topic = topics[parseInt(player.currentGame.get("topic"))];
-      let activeRoom = player.get("activeRoom");
-      let previous_convo = player.currentGame.get("chatChannel-" + activeRoom);
-      let PID = player.get("participantIdx");
-      let opinion = player.get("surveyAnswers")[game_topic];
+    let prompt = "";
+    let game_topic = topics[parseInt(player.currentGame.get("topic"))];
+    let activeRoom = player.get("activeRoom");
+    let previous_convo = player.currentGame.get("chatChannel-" + activeRoom);
+    let PID = player.get("participantIdx");
+    let opinion = player.get("surveyAnswers")[game_topic];
 
-      let chatLog = "";
-      for (const msg of previous_convo) {
-        chatLog += `${msg.sender}: ${msg.content}\n`;
-      }
+    let chatLog = "";
+    for (const msg of previous_convo) {
+      chatLog += `${msg.sender}: ${msg.content}\n`;
+    }
 
-      if (gameParams.condition == "control") {
-        // no completion needed
-      } else if (gameParams.condition == "personal") {
-        prompt = [
-          {
-            role: "system",
-            content:
-              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
-          },
-          {
-            role: "user",
-            content: `Topic of conversation: ${game_topic}
+    if (gameParams.condition == "control") {
+      // no completion needed
+    } else if (gameParams.condition == "personal") {
+      prompt = [
+        {
+          role: "system",
+          content:
+            "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
+        },
+        {
+          role: "user",
+          content: `Topic of conversation: ${game_topic}
             Previous Conversation: ${chatLog}
 
             Now suggest a message response for ${PID}$ who rated the discussion topic ${opinion}. 
@@ -567,28 +567,26 @@ Empirica.on(
 
             Your response must follow the JSON format: 
             {"SuggestionReasoning": Your reasoning, "Suggestion": {your suggestion for ${PID}$} } }`,
-          },
-        ];
-      } else if (gameParams.condition == "relational-static") {
-        let group_opinion = player.currentGame.players
-          .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
-          .map(
-            (p) =>
-              `${p.get("participantIdx")}: ${
-                p.get("surveyAnswers")[game_topic]
-              }`
-          )
-          .join(", ");
+        },
+      ];
+    } else if (gameParams.condition == "relational-static") {
+      let group_opinion = player.currentGame.players
+        .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
+        .map(
+          (p) =>
+            `${p.get("participantIdx")}: ${p.get("surveyAnswers")[game_topic]}`
+        )
+        .join(", ");
 
-        prompt = [
-          {
-            role: "system",
-            content:
-              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
-          },
-          {
-            role: "user",
-            content: `Topic of conversation: ${game_topic}
+      prompt = [
+        {
+          role: "system",
+          content:
+            "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
+        },
+        {
+          role: "user",
+          content: `Topic of conversation: ${game_topic}
             Participants: ${group_opinion}
             Previous Conversation: ${chatLog}
 
@@ -606,42 +604,38 @@ Empirica.on(
             "SuggestionReasoning": Your reasoning based on Cognitive Dissonance Theory, 
             "Suggestion": {your suggestion for ${PID}$} } }
             `,
-          },
-        ];
-      } else if (gameParams.condition == "relational-dynamic") {
-        let group_opinion = player.currentGame.players
-          .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
-          .map(
-            (p) =>
-              `${p.get("participantIdx")}: ${
-                p.get("surveyAnswers")[game_topic]
-              }`
-          )
-          .join(", ");
+        },
+      ];
+    } else if (gameParams.condition == "relational-dynamic") {
+      let group_opinion = player.currentGame.players
+        .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
+        .map(
+          (p) =>
+            `${p.get("participantIdx")}: ${p.get("surveyAnswers")[game_topic]}`
+        )
+        .join(", ");
 
-        let prev_opinion = player.currentGame.players
-          .filter(
-            (p) =>
-              p.get("joinedRooms").includes(player.get("activeRoom")) &&
-              p.get("activeRoom") != player.get("activeRoom")
-          )
-          .map(
-            (p) =>
-              `${p.get("participantIdx")}: ${
-                p.get("surveyAnswers")[game_topic]
-              }`
-          )
-          .join(", ");
+      let prev_opinion = player.currentGame.players
+        .filter(
+          (p) =>
+            p.get("joinedRooms").includes(player.get("activeRoom")) &&
+            p.get("activeRoom") != player.get("activeRoom")
+        )
+        .map(
+          (p) =>
+            `${p.get("participantIdx")}: ${p.get("surveyAnswers")[game_topic]}`
+        )
+        .join(", ");
 
-        prompt = [
-          {
-            role: "system",
-            content:
-              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
-          },
-          {
-            role: "user",
-            content: `Topic of conversation: ${game_topic}
+      prompt = [
+        {
+          role: "system",
+          content:
+            "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
+        },
+        {
+          role: "user",
+          content: `Topic of conversation: ${game_topic}
             Current Participants: ${group_opinion}
             Previous Participants who have left the conversation (if any): ${prev_opinion}
             Previous Conversation: ${chatLog}
@@ -661,33 +655,34 @@ Empirica.on(
             "SuggestionReasoning": Your reasoning based on Cognitive Dissonance Theory, 
             "Suggestion": {your suggestion for ${PID}$} } }
             `,
-          },
-        ];
-      }
+        },
+      ];
+    }
 
-      if (prompt !== "") {
-        try {
-          const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: prompt,
-            store: false,
-          });
+    if (prompt !== "") {
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: prompt,
+          store: false,
+        });
 
-          let reply = completion.choices[0].message["content"];
-          let parsed_reply = parseAIResponse(reply);
+        let reply = completion.choices[0].message["content"];
+        let parsed_reply = parseAIResponse(reply);
 
-          player.set("suggestedReply", {
-            id: requestAIAssistance.id + 1,
-            content: parsed_reply.Suggestion,
-          });
-        } catch (error) {
-          console.error("Error getting AI assistance:", error);
-          player.set("suggestedReply", {
-            id: requestAIAssistance.id + 1,
-            content:
-              "I apologize, but I'm having trouble generating a suggestion right now. Please try again.",
-          });
-        }
+        player.set("suggestedReply", {
+          id: parseInt(requestAIAssistance.id) + 1,
+          content: parsed_reply.Suggestion,
+        });
+
+        player.set("gtID", parseInt(requestAIAssistance.id) + 1);
+      } catch (error) {
+        console.error("Error getting AI assistance:", error);
+        player.set("suggestedReply", {
+          id: parseInt(requestAIAssistance.id) + 1,
+          content:
+            "I apologize, but I'm having trouble generating a suggestion right now. Please try again.",
+        });
       }
     }
   }
@@ -713,13 +708,16 @@ Empirica.onGameStart(({ game }) => {
   }
 
   // Get participants who passed all preceding steps
-  for (const player of game.players) {
-    // if (!readyPlayerList.has(player.id)) {
-    //   player.set("end", true);
-    //   player.set("endReason", "not-ready");
-    //   continue;
-    // }
 
+  const waitingPlayers = game.players.filter((p) => p.get("surveyAnswers"));
+  const notReadyPlayers = game.players.filter((p) => p.get("surveyAnswers"));
+
+  for (const player of notReadyPlayers) {
+    player.set("ended", true);
+    player.set("endReason", "not-reach-lobby");
+  }
+
+  for (const player of waitingPlayers) {
     player.set("step", "ready");
   }
 });
