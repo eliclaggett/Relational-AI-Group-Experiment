@@ -10,19 +10,25 @@
 
 export function parseAIResponse(response) {
   try {
+    // Remove potential formatting like triple backticks and "json" prefix
+    response = response.trim().replace(/^```json\n?|```$/g, "").replace(/^json\s*/, "");
     const parsedData = JSON.parse(response);
+    const normalizedData = {};
+    for (const key in parsedData) {
+        normalizedData[key.toLowerCase()] = parsedData[key];
+    }
+    
     return {
-      Rate: parsedData.Rate || {}, // Default to empty object if missing
-      SuggestionReasoning:
-        parsedData.SuggestionReasoning || "No reasoning provided.",
-      Suggestion: parsedData.Suggestion || "No suggestion available.",
+        Rate: normalizedData.rate || {},
+        SuggestionReasoning: normalizedData.suggestionreasoning || "No reasoning provided.",
+        Suggestion: normalizedData.suggestion || response,
     };
   } catch (error) {
     console.error("Failed to parse AI response:", error);
     return {
       Rate: {},
       SuggestionReasoning: "No reasoning provided.",
-      Suggestion: "No suggestion available.",
+      Suggestion: response,
     };
   }
 }
