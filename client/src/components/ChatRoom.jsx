@@ -81,6 +81,12 @@ export default function ChatRoom({}) {
   const [receivedCompletion, setReceivedCompletion] = useState(false);
   let self = {};
 
+  // Add AI suggestion for tutorial
+  const tutorialSuggestion = {
+    id: 1,
+    content: "Hello!",
+  };
+
   for (const idx in chatParticipants) {
     if (idx == participantIdx) {
       self = chatParticipants[idx];
@@ -104,14 +110,6 @@ export default function ChatRoom({}) {
       }
     }
   }, [rooms]);
-
-  if (stageName == "intro" && player.get("passedTutorialMessage")) {
-    messages.push({
-      content: "Hello world",
-      sender: player.get("participantIdx").toString(),
-      dt: new Date().getTime(),
-    });
-  }
 
   useEffect(() => {
     document.querySelector("textarea:not([readonly])").value =
@@ -319,18 +317,20 @@ export default function ChatRoom({}) {
     setNewRoomOpen(false);
   }
   function handleCopySuggestion() {
-    document.querySelector("textarea:not([readonly])").value =
-      suggestion.content;
+    const messageContent = stageName == "intro" ? "Hello!" : suggestion.content;
+    document.querySelector("textarea:not([readonly])").value = messageContent;
     let currentDrafts = drafts;
-    currentDrafts[viewingRoom] = suggestion.content;
+    currentDrafts[viewingRoom] = messageContent;
     setDrafts(currentDrafts);
     setReceivedCompletion(false);
   }
   function handleSendSuggestion() {
+    const messageContent = stageName == "intro" ? "Hello!" : suggestion.content;
+    
     game.set("chatChannel-" + activeRoom, [
       ...messages,
       {
-        content: suggestion.content,
+        content: messageContent,
         dt: new Date().getTime(),
         sender: participantIdx.toString(),
       },
@@ -340,7 +340,7 @@ export default function ChatRoom({}) {
     player.set("sendMsg", {
       sender: participantIdx.toString(),
       dt: new Date().getTime(),
-      content: suggestion.content,
+      content: messageContent,
     });
 
     document.querySelector("textarea:not([readonly])").value = "";
@@ -441,11 +441,13 @@ export default function ChatRoom({}) {
         <Container
           sx={{
             p: "0em 1em 1em 1em !important",
-            display: receivedCompletion ? "flex" : "none",
+            display: (stageName == "intro" && !player.get("passedTutorialMessage") && viewingRoom == activeRoom && player.get("joinedRooms")?.includes(viewingRoom)) ? "flex" : "none",
           }}
         >
           <div className="suggestion" onClick={handleCopySuggestion}>
-            {typeof suggestion.content == "object"
+            {stageName == "intro" && !player.get("passedTutorialMessage") 
+              ? "Hello!"
+              : typeof suggestion.content == "object"
               ? JSON.stringify(suggestion.content)
               : suggestion.content}
           </div>

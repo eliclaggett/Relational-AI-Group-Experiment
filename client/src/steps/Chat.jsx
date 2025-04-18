@@ -33,7 +33,7 @@ export default function Chat({}) {
       <ProgressList
         items={[
           {
-            name: "Initial Survey",
+            name: "Survey",
             time: "~" + gameParams.lobbyTime.toString() + " min",
           },
           {

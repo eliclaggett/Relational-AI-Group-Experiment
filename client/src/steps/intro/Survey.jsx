@@ -90,11 +90,10 @@ export default function Survey({ next }) {
         />
 
         <Typography variant="h1" sx={{ mb: "1rem" }}>
-          Initial Survey
+          Survey
         </Typography>
         <Typography variant="body1">
           Please react to all of the statements below before the timer elapses.
-          The timer will start when all participants have joined the study.
         </Typography>
 
         {renderQuestions()}

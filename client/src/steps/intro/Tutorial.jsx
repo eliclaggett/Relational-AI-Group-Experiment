@@ -170,7 +170,7 @@ export default function Tutorial({ next }) {
       !(step == 1 || step == 2 || step == 5 || step == 6) ||
       radioButtonVals["q" + step] == correctAnswers[step]
     ) {
-      if (step == 6) {
+      if (step == 7) {
         // Mark that the tutorial was finished
         player.set("passedTutorial", true);
         next();
@@ -229,91 +229,20 @@ export default function Tutorial({ next }) {
       </p>
     </Stack>
   );
-  if (step == 2) {
+  if (step == 2) {   
     tutorialStepUI = (
       <Stack gap={3}>
-        {/* <img
-          src="/images/tutorial_study_desc.svg"
-          style={{ marginBottom: "-8em" }}
-        /> */}
-        <Typography variant="h1">Study Description</Typography>
-
-        <Typography variant="h2">Goal</Typography>
-        <Typography variant="body1">
-          In this study, we are evaluating the ability for productive
-          discussions to form online when given the free ability to join, leave,
-          or create groups and drive the conversation. You will work together
-          with several other participants to establish a mutual understanding of
-          your thoughts about a recent news topic. At any time, you can abandon
-          your conversation and join a different one if you so desire. At the
-          end of the study, you will be rewarded for how well your group
-          discussed.
-        </Typography>
-
-        <Typography variant="h2" sx={{}}>
+        <Typography variant="h1" sx={{}}></Typography>
+        <img src="assets/overview.png" style={{ width: "80%", aspectRatio: "3", margin: "0 auto", display: "block" }} />
+        {/* <Typography variant="h2" sx={{}}>
           Steps
-        </Typography>
-        <Typography>
+        </Typography> */}
+        <img src="assets/tutorial_study-steps.svg" style={{ height: "12em" }} />
+        
+        <Typography variant="body1">
           This study has three parts. Each part has a set timer, and the entire
           study will take {gameParams.studyTime} minutes to complete. You will
-          have an opportunity to earn extra money based on your performance.
-        </Typography>
-        <img src="assets/tutorial_study-steps.svg" style={{ height: "12em" }} />
-        <Typography variant="h4" sx={{}}>
-          Step 1) Initial Survey
-        </Typography>
-        <Typography variant="body1">
-          While participants are joining, you will take a short survey of your
-          opinions toward a variety of contentious issues. You can be completely
-          honest here, we are just gauging your interest in each topic. Once you
-          finish, you will join a waiting room until all the other participants
-          are ready.
-        </Typography>
-        <Typography variant="h4" sx={{}}>
-          Step 2) Group Discussion
-        </Typography>
-        <Typography variant="body1">
-          Next, you will join a chat room with other participants and a chatbot
-          moderator. After the moderator introduces the topic of discussion, you
-          need to use the following {gameParams.chatTime} minutes to thoroughly
-          discuss your thoughts with the other members of the room. At any
-          point, you can join a different room or create your own if you prefer.
-        </Typography>
-        <Typography variant="h4" sx={{}}>
-          Step 3) Summary Task
-        </Typography>
-        <Typography variant="body1">
-          Lastly, we will evaluate the quality of your discussion by asking you
-          and the fellow members of your chat room to summarize the key points.
-          Groups where <b>everyone</b> reaches a mutual understanding will be
-          rewarded with a higher bonus than groups whose discussion is not
-          equally summarized by all members.
-        </Typography>
-
-        <Typography variant="h2">Payment</Typography>
-        <Typography variant="body1">
-          This study is interactive and requires recruiting a specific number of
-          participants. In the event that we cannot recruit enough participants
-          we will end the study after Step 1 and you will be asked to cancel
-          your participation. We will compensate you for your time with a{" "}
-          {formatMoney(gameParams.surveyPay)} bonus payment.
-          <br />
-          <br />
-          You will be paid{" "}
-          {formatMoney(gameParams.surveyPay + gameParams.discussionPay)} for
-          completing this study in its entirety. Based on your task performance,
-          and the performance of the other members in the chat room of your
-          choosing, you will be paid an additional bonus, up to{" "}
-          {formatMoney(gameParams.maxBonus)}.
-          <br />
-          <br />
-          The maximum pay you can earn for this study is{" "}
-          {formatMoney(
-            gameParams.surveyPay +
-              gameParams.discussionPay +
-              gameParams.maxBonus
-          )}
-          .
+          have an opportunity to earn extra money based on your performance. The rest of this tutorial will guide you through each step of the study.
         </Typography>
         <FormControl sx={{ pt: 4 }}>
           <FormLabel>What is the purpose of this study?</FormLabel>
@@ -330,19 +259,17 @@ export default function Tutorial({ next }) {
   } else if (step == 3) {
     tutorialStepUI = (
       <Stack gap={3}>
-        <Typography variant="h1">Part 1: Initial Survey</Typography>
+        <Typography variant="h1">Step 1 Tutorial: Survey</Typography>
         <Typography variant="body1">
-          First, you will complete a brief initial survey of your opinions.
-          After you finish, you will automatically proceed to a waiting room
-          where you will wait for a maximum of {gameParams.maxWaitTime} minutes
-          while the other participants fill out the survey. While you are
-          waiting, you can pick out a unique name and icon to represent yourself
-          during the group chat.
+          First, you will complete a brief survey of your opinions.
         </Typography>
 
+        {/* After you finish, you will be placed in a waiting room for a maximum of {gameParams.maxWaitTime} minutes. While you are
+          waiting, you can pick out a unique name and icon to represent yourself
+          in the group chat. */}
+
         <Typography variant="h3">
-          This is an example question. Select any of the responses below to
-          continue.
+          Now, let's practice! Here is an example question:
         </Typography>
         <LikertQuestion
           value={exampleSurveyVal}
@@ -350,30 +277,25 @@ export default function Tutorial({ next }) {
             setExampleSurveyVal(ev.target.value);
           }}
         />
-        <Typography variant="body1">
+        {/* <Typography variant="body1">
           We will assign discussion topics based on the survey results of all
           participants so that some participants agree and others disagree about
           the topic. At the start of the discussion task, participants will be
           randomly assigned to a chat room with other participants.
-        </Typography>
+        </Typography> */}
       </Stack>
     );
   } else if (step == 4) {
     tutorialStepUI = (
       <Stack gap={3}>
-        <Typography variant="h1">Part 2: Group Discussion</Typography>
+        <Typography variant="h1">Step 2 Tutorial: Group Discussion</Typography>
         <Typography variant="body1">
-          After all participants complete the initial survey, you will
-          automatically be placed in a chat room with other participants and a
+          After all participants join in, you will be placed in a chat room with other participants and a
           chatbot moderator. Multiple rooms will be created by default and you
           can move about them freely.
           <br />
           <br />
-          The room you’re currently viewing will be highlighted. When you click
-          on a different room, you can view its contents, but you cannot send
-          messages unless you join it by clicking “Join” at the top of the chat
-          window.
-          <br />
+          By clicking "Join" at the top of the chat window, you can join a room.
           <br />
         </Typography>
         <Container
@@ -451,8 +373,8 @@ export default function Tutorial({ next }) {
         >
           <ChatRoom />
         </Container>
-        <b>
-          Join the #tutorial-room and send a message that says: “Hello world”
+        <b style={{ display: !passedTutorialMessage ? "block" : "none" }}>
+          Join the #tutorial-room and send a message that says: "Hello!"
         </b>
         <Alert
           variant="standard"
@@ -467,21 +389,20 @@ export default function Tutorial({ next }) {
   } else if (step == 5) {
     tutorialStepUI = (
       <Stack gap={3}>
-        <Typography variant="h1">Part 3: Summary Task</Typography>
+        <Typography variant="h1">Step 3 Tutorial: Summary Task</Typography>
         <Typography variant="body1">
           After the timer elapses you will be asked to summarize the contents of
           your discussion, including the contributions of all other members of
-          your room. Your bonus will be calculated based on how well you and
-          your fellow room members summarize the discussion. Specifically:
+          your room. Your bonus will be calculated as follows:
         </Typography>
 
         <img src="assets/tutorial_bonus.svg" style={{ height: "15em" }} />
 
         <Typography variant="body1">
-          Summaries will automatically be rated for quality using our AI rater.
-          Note that joining a chat room with many members has the highest
+          {/* Note that joining a chat room with many members has the highest
           potential bonus payment, but also carries risk if all members do not
-          perform equally well. If your bonus is calculated to be $0.00 or
+          perform equally well.  */}
+          If your bonus is calculated to be $0.00 or
           lower, we will provide only the base pay for this study.
           <br />
           <br />
@@ -536,11 +457,7 @@ export default function Tutorial({ next }) {
             a bigger room. However, your bonus is also determined by the quality
             of the summary produced by the other members of your room.
           </Typography>
-          <Typography variant="body1">
-            Joining a room with many participants can potentially increase your
-            bonus, but it risks losing all of your bonus if the other members
-            cannot summarize each other’s thoughts, including yours.
-          </Typography>
+          
         </Paper>
         <Paper
           elevation={0}
@@ -556,7 +473,7 @@ export default function Tutorial({ next }) {
           <Typography variant="h3">2. You can be alone</Typography>
           <Typography variant="body1">
             You may create a chat room with just you and a chatbot moderator,
-            with a guaranteed bonus of $
+            with a guaranteed bonus of
             {formatMoney(gameParams.bonusPerParticipant)} if you effectively
             summarize your discussion with the bot.
           </Typography>
@@ -577,11 +494,7 @@ export default function Tutorial({ next }) {
           </Typography>
 
           <Typography variant="body1">
-            For the purposes of the discussion summary and bonus calculation,
-            you will be considered a member of the last room you join. If you
-            join a chat room without enough time left to effectively convey your
-            thoughts, the other members of the room will likely be unable to
-            summarize your contribution.
+            Your summary and bonus will be calculated based on the last chat room you join.
           </Typography>
         </Paper>
         <Paper
@@ -602,8 +515,7 @@ export default function Tutorial({ next }) {
             4. Most importantly, write a good summary
           </Typography>
           <Typography variant="body1">
-            To earn a bonus and maximize your pay for this study, please take
-            care to thoroughly summarize the discussion of the last chat room
+            To earn maximized bonus, please take care to thoroughly summarize the discussion of the last chat room
             you join. We expect summaries to be about 100 &ndash;150 words in
             length and to reiterate the viewpoints of all of the participants in
             the room.
@@ -622,6 +534,15 @@ export default function Tutorial({ next }) {
             {q6RadioButtons}
           </RadioGroup>
         </FormControl>
+      </Stack>
+    );
+  } else if (step == 7) {
+    tutorialStepUI = (
+      <Stack gap={3} alignItems={"center"}>
+        <Typography variant="h1">Congratulations!</Typography>
+        <Typography variant="body1" sx={{ textAlign: "center" }}>
+          You have completed the tutorial! Now, you will proceed to the first step of the game -- the survey.
+        </Typography>
       </Stack>
     );
   }
