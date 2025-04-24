@@ -587,7 +587,11 @@ Empirica.on("player", "sendMsg", (_, { player, sendMsg }) => {
 
     // Handle tutorial tasks
     if (tutorialTask === 1 && messageContent.toLowerCase().includes("hello")) {
-      player.set("tutorialTask", 2);
+      if (gameParams.condition === "control") {
+        player.set("tutorialTask", 3);
+      } else {
+        player.set("tutorialTask", 2);
+      }
       player.set("chatChannel-" + viewingRoom, [
         ...msgs,
         newMessage,
@@ -636,15 +640,6 @@ Empirica.on("player", "acceptSuggestion", (_, { player }) => {
   if (participantStep === "tutorial" && tutorialTask === 2) {
     // Add the accepted suggestion to the chat
     const msgs = player.get("chatChannel-" + viewingRoom) || [];
-    player.set("chatChannel-" + viewingRoom, [
-      ...msgs,
-      {
-        sender: player.get("participantIdx").toString(),
-        dt: new Date().getTime(),
-        content: "Hello!"
-      }
-    ]);
-
     // Progress to next task
     player.set("tutorialTask", 3);
     
@@ -653,7 +648,7 @@ Empirica.on("player", "acceptSuggestion", (_, { player }) => {
       ...msgs,
       {
         sender: -1,
-        dt: new Date().getTime(),
+        dt: new Date().getTime()+2000,
         content: "Great! You've accepted the AI suggestion. Now let's try joining a different group. There are three groups available with different discussion topics."
       }
     ]);
@@ -751,8 +746,12 @@ Empirica.on(
       let activeRoom = player.get("activeRoom");
       let previous_convo = player.currentGame.get("chatChannel-" + activeRoom);
       let PID = player.get("participantIdx");
-      let opinion = player.get("surveyAnswers")[game_topic];
 
+      // Check if participant has sent any messages in the current room
+      const hasParticipantSentMessage = previous_convo.some(msg => msg.sender === PID.toString());
+      if (!hasParticipantSentMessage) return;
+
+      let opinion = player.get("surveyAnswers")[game_topic];
       let chatLog = "";
       for (const msg of previous_convo) {
         chatLog += `${msg.sender}: ${msg.content}\n`;

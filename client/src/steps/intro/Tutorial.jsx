@@ -289,11 +289,11 @@ export default function Tutorial({ next }) {
         text: "Join the #tutorial-room and send a message that says: 'Hello!'",
         completed: tutorialTask > 1
       },
-      {
+      ...(gameParams.condition !== "control" ? [{
         id: 2,
         text: "Accept the AI suggestion by clicking on the green box",
         completed: tutorialTask > 2
-      },
+      }] : []),
       {
         id: 3,
         text: "Join a different group by clicking 'Join' on another room",

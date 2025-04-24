@@ -87,12 +87,6 @@ export default function ChatRoom({}) {
   const [receivedCompletion, setReceivedCompletion] = useState(false);
   let self = {};
 
-  // Add AI suggestion for tutorial
-  const tutorialSuggestion = {
-    id: 1,
-    content: "Hello!",
-  };
-
   for (const idx in chatParticipants) {
     if (idx == participantIdx) {
       self = chatParticipants[idx];
@@ -318,7 +312,7 @@ export default function ChatRoom({}) {
     setNewRoomOpen(false);
   }
   function handleCopySuggestion() {
-    const messageContent = stageName == "intro" ? "Hello!" : suggestion.content;
+    const messageContent = stageName == "intro" ? "This is an AI-generated message!" : suggestion.content;
     document.querySelector("textarea:not([readonly])").value = messageContent;
     let currentDrafts = drafts;
     currentDrafts[viewingRoom] = messageContent;
@@ -327,7 +321,7 @@ export default function ChatRoom({}) {
     player.set("acceptSuggestion", true);
   }
   function handleSendSuggestion() {
-    const messageContent = stageName == "intro" ? "Hello!" : suggestion.content;
+    const messageContent = stageName == "intro" ? "This is an AI-generated message!" : suggestion.content;
     player.set("acceptSuggestion", true);
     game.set("chatChannel-" + activeRoom, [
       ...messages,
@@ -443,41 +437,51 @@ export default function ChatRoom({}) {
             </span>
           </Tooltip>
         </Container>
+        {(stageName === "intro" &&
+        viewingRoom === activeRoom &&
+        player.get("joinedRooms")?.includes(viewingRoom) &&
+        gameParams.condition !== "control" &&
+        messages.some(msg => msg.sender === participantIdx.toString())) ? (
         <Container
-          sx={{
-            p: "0em 1em 1em 1em !important",
-            display: (stageName == "intro" && !player.get("passedTutorialMessage") && viewingRoom == activeRoom && player.get("joinedRooms")?.includes(viewingRoom)) ? "flex" : "none",
-          }}
+          sx={{ p: "0em 1em 1em 1em !important", display: "flex" }}
         >
           <div className="suggestion" onClick={handleCopySuggestion}>
-            {stageName == "intro" && !player.get("passedTutorialMessage") 
-              ? "Hello!"
-              : typeof suggestion.content == "object"
-              ? JSON.stringify(suggestion.content)
-              : suggestion.content}
+            This is an AI-generated message!
           </div>
           <span>
             <IconButton
               variant="plain"
               sx={{ minWidth: "2.5em", ml: "0.5em" }}
-              disabled={viewingRoom != activeRoom}
+              disabled={viewingRoom !== activeRoom}
               onClick={handleSendSuggestion}
             >
               <SendRounded />
             </IconButton>
           </span>
-
-          {/* <div className={suggestionClass}>
-        <span onClick={handleSuggestionClick}>Suggestion (click to copy)</span>
-        <div className="input-wrapper">
-          <div onClick={handleSuggestionClick}>{autocompleteOptions[0]}</div>
-        </div>
-        <IconButton variant="plain" onClick={handleSendSuggestion}>
-          <SendRounded />
-        </IconButton>
-      </div> */}
         </Container>
-        {/* <Button onClick={requestCompletion}>Request Completion</Button> */}
+      ) : (
+        stageName !== "intro" ? (
+          <Container
+            sx={{ p: "0em 1em 1em 1em !important", display: "flex" }}
+          >
+            <div className="suggestion" onClick={handleCopySuggestion}>
+              {typeof suggestion.content === "object"
+                ? JSON.stringify(suggestion.content)
+                : suggestion.content}
+            </div>
+            <span>
+              <IconButton
+                variant="plain"
+                sx={{ minWidth: "2.5em", ml: "0.5em" }}
+                disabled={viewingRoom !== activeRoom}
+                onClick={handleSendSuggestion}
+              >
+                <SendRounded />
+              </IconButton>
+            </span>
+          </Container>
+        ) : null
+      )}
       </Container>
       {/* Active Users */}
       <Container
