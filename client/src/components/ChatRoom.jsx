@@ -73,9 +73,15 @@ export default function ChatRoom({}) {
   const viewingRoom = player.get("viewingRoom") || 0;
   const activeRoom = player.get("activeRoom");
   const [newRoomOpen, setNewRoomOpen] = React.useState(false);
-  const rooms = game.get("chatRooms") || [{ id: 0, title: "tutorial-room" }];
-  const chatParticipants = game.get("chatParticipants");
-  const messages = game.get("chatChannel-" + viewingRoom) || [];
+  const rooms = participantStep === "tutorial" 
+    ? player.get("tutorialRooms") || {}
+    : game.get("chatRooms") || {};
+  const chatParticipants = participantStep === "tutorial"
+    ? player.get("tutorialParticipants") || {}
+    : game.get("chatParticipants") || {};
+  const messages = participantStep === "tutorial"
+    ? player.get("chatChannel-" + viewingRoom) || []
+    : game.get("chatChannel-" + viewingRoom) || [];
   const [drafts, setDrafts] = useState({});
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [receivedCompletion, setReceivedCompletion] = useState(false);
@@ -177,6 +183,9 @@ export default function ChatRoom({}) {
     let msgIdx = 0;
     return msgs.map((msg) => {
       msgIdx += 1;
+      const sender = chatParticipants[msg.sender];
+      if (!sender) return null; // Skip if sender not found
+      
       return (
         <Message
           className="msg"
@@ -191,19 +200,17 @@ export default function ChatRoom({}) {
           avatarPosition="tl"
         >
           <Message.Header
-            sender={chatParticipants[msg.sender].name}
+            sender={sender.name}
             sentTime={new Date(msg.dt).toLocaleTimeString("en-us")}
           />
           <ChatAvatar
-            alt={chatParticipants[msg.sender].name}
+            alt={sender.name}
             src={
               msg.sender == "-1"
                 ? "/assets/ai0.svg"
-                : "/assets/animal_icons/" +
-                  chatParticipants[msg.sender].name +
-                  ".svg"
+                : "/assets/animal_icons/" + /*sender.name*/ "cobra" + ".svg"
             }
-            style={{ backgroundColor: chatParticipants[msg.sender].color }}
+            style={{ backgroundColor: sender.color }}
           />
         </Message>
       );
@@ -243,7 +250,12 @@ export default function ChatRoom({}) {
   function generateUserListItems() {
     const roomParticipants = [];
     for (const idx in chatParticipants) {
-      if (
+      if (participantStep === "tutorial") {
+        // During tutorial, show all participants in the current room
+        if (chatParticipants[idx].room == viewingRoom) {
+          roomParticipants.push(chatParticipants[idx]);
+        }
+      } else if (
         participantStep == "group-discussion" &&
         chatParticipants[idx].room == viewingRoom
       ) {
@@ -254,15 +266,6 @@ export default function ChatRoom({}) {
       ) {
         roomParticipants.push(chatParticipants[idx]);
       }
-      // else if (participantStep != "group-discussion" &&
-      //   idx == participantIdx) {
-      //   roomParticipants.push({
-      //     name: 'tutorial-user',
-      //     room: 0,
-      //     color: 'pink',
-      //     active: ''
-      //   });
-      // }
     }
 
     if (roomParticipants.length == 0) {
@@ -300,9 +303,7 @@ export default function ChatRoom({}) {
   }
 
   function showNewRoomModal() {
-    if (participantStep == "group-discussion") {
       setNewRoomOpen(true);
-    }
   }
 
   function handleClose() {
@@ -323,10 +324,11 @@ export default function ChatRoom({}) {
     currentDrafts[viewingRoom] = messageContent;
     setDrafts(currentDrafts);
     setReceivedCompletion(false);
+    player.set("acceptSuggestion", true);
   }
   function handleSendSuggestion() {
     const messageContent = stageName == "intro" ? "Hello!" : suggestion.content;
-    
+    player.set("acceptSuggestion", true);
     game.set("chatChannel-" + activeRoom, [
       ...messages,
       {
@@ -348,6 +350,9 @@ export default function ChatRoom({}) {
     currentDrafts[viewingRoom] = "";
     setDrafts(currentDrafts);
   }
+
+  // Get the current room title safely
+  const currentRoom = rooms[viewingRoom] || { title: "Loading..." };
 
   return (
     <Stack
@@ -386,7 +391,7 @@ export default function ChatRoom({}) {
         <Container className="msgHeader" sx={{ alignItems: "center" }}>
           <Stack direction={"row"} sx={{ alignItems: "center" }}>
             <TagIcon />
-            <b>{rooms[viewingRoom].title}</b>
+            <b>{currentRoom.title}</b>
           </Stack>
           <Stack direction={"row"} sx={{ alignItems: "center" }} gap={1}>
             <Button
@@ -504,7 +509,7 @@ export default function ChatRoom({}) {
               >
                 <Avatar
                   alt={self.name}
-                  src={"/assets/animal_icons/" + self.name + ".svg"}
+                  src={"/assets/animal_icons/" + /*self.name*/ "beaver" + ".svg"}
                   sx={{ bgcolor: self.color }}
                 />
               </Badge>

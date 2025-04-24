@@ -212,23 +212,24 @@ const gameParams = {
   surveyPay: 1.5,
   discussionPay: 1.5,
   bonusPerParticipant: 1,
-  maxBonus: 5,
+  maxBonus: 2.5,
   maxWaitTime: 5,
   inactivityMax: 150, // seconds
   inactivityWarning: 120, // seconds
 
-  chatTime: 15,
-  lobbyTime: 5,
+  chatTime: 4,
+  lobbyTime: 10,
   summaryTime: 5,
   followupDelay1: 2, // Send a followup message 2 minutes after the chat starts
   followupDelay2: 2, // Send another followup 2 minutes after the previous followup
   switchRoomDelay: 6, // Send a suggestion to switch rooms 6 minutes after the chat starts
 
   consentQuestions: {
-    q1: "I am age 18 or older.",
+    q1: "I am age 18 or older and in the United States.",
     q2: "I have read and understand the information above.",
     q3: "I have reviewed the eligibility requirements listed in the Participant Requirements section of this consent form and certify that I am eligible to participate in this research, to the best of my knowledge.",
     q4: "I want to participate in this research and continue with the game.",
+    q5: "I will refrain from sharing private, sensitive or identifiable information about myself or others that I would not want shared outside the research setting."
   },
 };
 
@@ -290,15 +291,17 @@ Empirica.on("player", (ctx, { player, _ }) => {
   player.set("activeRoom", -1);
   player.set("joinedRooms", []);
   player.set("viewingRoom", 0);
-  chatParticipants[playerCounter] = {
-    name: "tutorial-user",
-    room: -1,
-    color: "pink",
-    active: "",
+
+  // Initialize base chat participants
+  const baseParticipants = {
+    "-1": { name: "Moderator Bot", room: 0, color: "#f4f4f4", active: new Date().getTime() },
+    [playerCounter]: { name: "tutorial-user", room: 0, color: colors[playerCounter], active: new Date().getTime() }
   };
 
+  // Set initial game state
+  player.currentGame.set("chatParticipants", baseParticipants);
+
   playerCounter += 1;
-  player.currentGame.set("chatParticipants", chatParticipants);
 });
 
 // Called when a participant submits the reCAPTCHA
@@ -358,7 +361,116 @@ Empirica.on(
     player.set("passedConsentForm", passedConsentForm);
 
     if (passedConsentForm) {
+      // Initialize tutorial directly
       player.set("step", "tutorial");
+      player.set("tutorialTask", 1);
+
+      // Add dummy participants for the tutorial
+      const tutorialParticipants = {
+        "-1": { name: "Moderator Bot", room: 0, color: "#f4f4f4", active: new Date().getTime() },
+        [player.get("participantIdx")]: { 
+          name: "tutorial-user", 
+          room: 0, 
+          color: player.get("color"), 
+          active: new Date().getTime() 
+        },
+        "dummy1": { name: "Alex", room: 0, color: "#A7C7E7", active: new Date().getTime() },
+        "dummy2": { name: "Jordan", room: 0, color: "#B39DDB", active: new Date().getTime() },
+        "dummy3": { name: "Taylor", room: 0, color: "#F2B0A2", active: new Date().getTime() }
+      };
+
+      // Create initial chat rooms for the tutorial
+      const tutorialRooms = {
+        0: { title: "tutorial-room", id: 0 },
+        1: { title: "group-1", id: 1 },
+        2: { title: "group-2", id: 2 },
+        3: { title: "group-3", id: 3 }
+      };
+
+      // Initialize chat channels for tutorial
+      player.set("tutorialRooms", tutorialRooms);
+      player.set("tutorialParticipants", tutorialParticipants);
+      player.set("chatChannel-0", []);
+      player.set("chatChannel-1", []);
+      player.set("chatChannel-2", []);
+      player.set("chatChannel-3", []);
+
+      // Set tutorial game state
+      player.currentGame.set("chatParticipants", tutorialParticipants);
+      player.currentGame.set("chatRooms", tutorialRooms);
+
+      // Set initial room state
+      player.set("activeRoom", 0);
+      player.set("viewingRoom", 0);
+      player.set("joinedRooms", [0]);
+
+      // Add welcome message to tutorial room
+      player.set("chatChannel-0", [
+        {
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: "Welcome to the tutorial! Please type 'Hello!' to begin."
+        }
+      ]);
+
+      // Add dummy messages to group-1
+      player.set("chatChannel-1", [
+        {
+          sender: "dummy1",
+          dt: new Date().getTime() - 300000, // 5 minutes ago
+          content: "I think we should focus on the environmental impact first."
+        },
+        {
+          sender: "dummy2",
+          dt: new Date().getTime() - 240000, // 4 minutes ago
+          content: "Yes, but we also need to consider the economic factors."
+        },
+        {
+          sender: "dummy3",
+          dt: new Date().getTime() - 180000, // 3 minutes ago
+          content: "Good point! Let's discuss both aspects."
+        }
+      ]);
+
+      // Add dummy messages to group-2
+      player.set("chatChannel-2", [
+        {
+          sender: "dummy1",
+          dt: new Date().getTime() - 300000,
+          content: "Has anyone read the latest research on this topic?"
+        },
+        {
+          sender: "dummy2",
+          dt: new Date().getTime() - 240000,
+          content: "Yes, I found some interesting studies about it."
+        },
+        {
+          sender: "dummy3",
+          dt: new Date().getTime() - 180000,
+          content: "Could you share those with us?"
+        }
+      ]);
+
+      // Add dummy messages to group-3
+      player.set("chatChannel-3", [
+        {
+          sender: "dummy1",
+          dt: new Date().getTime() - 300000,
+          content: "I have a different perspective on this issue."
+        },
+        {
+          sender: "dummy2",
+          dt: new Date().getTime() - 240000,
+          content: "I'd love to hear your thoughts!"
+        },
+        {
+          sender: "dummy3",
+          dt: new Date().getTime() - 180000,
+          content: "Yes, please share your viewpoint."
+        }
+      ]);
+
+      Empirica.flush();
     }
   }
 );
@@ -386,105 +498,205 @@ Empirica.on("player", "selfIdentity", (_, { player, selfIdentity }) => {
 
 Empirica.on("player", "activeRoom", (_, { player, activeRoom }) => {
   const participantIdx = player.get("participantIdx");
-  chatParticipants[participantIdx].room = activeRoom;
-  player.currentGame.set("chatParticipants", chatParticipants);
+  const participantStep = player.get("step");
+  const tutorialTask = player.get("tutorialTask");
+
+  if (participantStep === "tutorial") {
+    // Update tutorial participants
+    const tutorialParticipants = player.get("tutorialParticipants") || {};
+    if (tutorialParticipants[participantIdx]) {
+      tutorialParticipants[participantIdx].room = activeRoom;
+      tutorialParticipants[participantIdx].active = new Date().getTime();
+      player.set("tutorialParticipants", tutorialParticipants);
+    }
+
+    // Update joined rooms
+    const joinedRooms = player.get("joinedRooms") || [];
+    if (!joinedRooms.includes(activeRoom)) {
+      joinedRooms.push(activeRoom);
+      player.set("joinedRooms", joinedRooms);
+    }
+
+    // Update active room
+    player.set("activeRoom", activeRoom);
+    player.set("viewingRoom", activeRoom);
+
+    // Update game state
+    player.currentGame.set("chatParticipants", tutorialParticipants);
+
+    // Check if this is task 3 (joining a different group)
+    if (tutorialTask === 3 && activeRoom !== 0) {
+      player.set("tutorialTask", 4);
+      const msgs = player.get("chatChannel-" + activeRoom) || [];
+      player.set("chatChannel-" + activeRoom, [
+        ...msgs,
+        {
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: "Perfect! You've joined a new group. Now let's try creating your own group."
+        }
+      ]);
+    }
+  } else {
+    // Update game participants
+    const chatParticipants = player.currentGame.get("chatParticipants") || {};
+    if (chatParticipants[participantIdx]) {
+      chatParticipants[participantIdx].room = activeRoom;
+      chatParticipants[participantIdx].active = new Date().getTime();
+      player.currentGame.set("chatParticipants", chatParticipants);
+    }
+
+    // Update joined rooms
+    const joinedRooms = player.get("joinedRooms") || [];
+    if (!joinedRooms.includes(activeRoom)) {
+      joinedRooms.push(activeRoom);
+      player.set("joinedRooms", joinedRooms);
+    }
+
+    // Update active room
+    player.set("activeRoom", activeRoom);
+    player.set("viewingRoom", activeRoom);
+  }
   Empirica.flush();
 });
 
 Empirica.on("player", "sendMsg", (_, { player, sendMsg }) => {
   const participantIdx = sendMsg["sender"];
   const participantStep = player.get("step");
+  const viewingRoom = player.get("viewingRoom");
+  const tutorialTask = player.get("tutorialTask") || 1;
+  const messageContent = sendMsg?.content || "";
 
-  if (participantStep != "group-discussion") {
-    if (
-      sendMsg["content"] == "Hello world" ||
-      sendMsg["content"] == '"Hello world"'
-    ) {
-      player.set("passedTutorialMessage", true);
-      Empirica.flush();
+  if (participantStep === "tutorial") {
+    // Update participant's active timestamp
+    const tutorialParticipants = player.get("tutorialParticipants") || {};
+    if (tutorialParticipants[participantIdx]) {
+      tutorialParticipants[participantIdx].active = sendMsg["dt"];
+      player.set("tutorialParticipants", tutorialParticipants);
     }
-    return;
+
+    // Get current messages
+    const msgs = player.get("chatChannel-" + viewingRoom) || [];
+
+    // Add the new message
+    const newMessage = {
+      content: messageContent,
+      sender: participantIdx.toString(),
+      dt: new Date().getTime()
+    };
+
+    // Handle tutorial tasks
+    if (tutorialTask === 1 && messageContent.toLowerCase().includes("hello")) {
+      player.set("tutorialTask", 2);
+      player.set("chatChannel-" + viewingRoom, [
+        ...msgs,
+        newMessage,
+        {
+          sender: "dummy1",
+          dt: new Date().getTime() + 2000,
+          content: "Hi there! I'm excited to discuss with you."
+        },
+        {
+          sender: "dummy2",
+          dt: new Date().getTime() + 3000,
+          content: "Hello everyone! Looking forward to our discussion."
+        },
+        {
+          sender: "dummy3",
+          dt: new Date().getTime() + 4000,
+          content: "Hey! Let's have a great conversation."
+        },
+        {
+          sender: "-1",
+          dt: new Date().getTime() + 5000,
+          content: "Great! Now let's try using the AI suggestion feature. Click on the green suggestion box to accept it."
+        }
+      ]);
+    } else {
+      // Handle regular messages during tutorial
+      player.set("chatChannel-" + viewingRoom, [...msgs, newMessage]);
+    }
+    Empirica.flush();
+  } else {
+    // For non-tutorial messages
+    const chatParticipants = player.currentGame.get("chatParticipants") || {};
+    if (chatParticipants[participantIdx]) {
+      chatParticipants[participantIdx].active = sendMsg["dt"];
+      player.currentGame.set("chatParticipants", chatParticipants);
+    }
+    Empirica.flush();
   }
+});
 
-  chatParticipants[participantIdx].active = sendMsg["dt"];
+Empirica.on("player", "acceptSuggestion", (_, { player }) => {
+  const participantStep = player.get("step");
+  const tutorialTask = player.get("tutorialTask");
+  const viewingRoom = player.get("viewingRoom");
 
-  player.currentGame.set("chatParticipants", chatParticipants);
-  Empirica.flush();
+  if (participantStep === "tutorial" && tutorialTask === 2) {
+    // Add the accepted suggestion to the chat
+    const msgs = player.get("chatChannel-" + viewingRoom) || [];
+    player.set("chatChannel-" + viewingRoom, [
+      ...msgs,
+      {
+        sender: player.get("participantIdx").toString(),
+        dt: new Date().getTime(),
+        content: "Hello!"
+      }
+    ]);
+
+    // Progress to next task
+    player.set("tutorialTask", 3);
+    
+    // Add success message
+    player.set("chatChannel-" + viewingRoom, [
+      ...msgs,
+      {
+        sender: -1,
+        dt: new Date().getTime(),
+        content: "Great! You've accepted the AI suggestion. Now let's try joining a different group. There are three groups available with different discussion topics."
+      }
+    ]);
+    
+    Empirica.flush();
+  }
 });
 
 Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
-  if (!createRoom) {
-    return;
+  if (!createRoom) return;
+
+  const participantStep = player.get("step");
+  const tutorialTask = player.get("tutorialTask");
+
+  if (participantStep === "tutorial" && tutorialTask === 4) {
+    // Create a new room for the tutorial
+    const roomId = Object.keys(player.get("tutorialRooms") || {}).length;
+    const newRoom = { title: "new-group", id: roomId };
+    
+    const tutorialRooms = player.get("tutorialRooms") || {};
+    tutorialRooms[roomId] = newRoom;
+    player.set("tutorialRooms", tutorialRooms);
+    
+    // Initialize chat channel for new room
+    player.set("chatChannel-" + roomId, []);
+    
+    // Update player's room state
+    player.set("activeRoom", roomId);
+    player.set("viewingRoom", roomId);
+    player.set("tutorialTask", 5);
+    player.set("passedTutorialMessage", true);
+    
+    // Add success message
+    player.set("chatChannel-" + roomId, [
+      {
+        sender: "-1",
+        dt: new Date().getTime(),
+        content: "Excellent! You've completed all the tutorial tasks. You may now proceed to the next step."
+      }
+    ]);
+    
+    Empirica.flush();
   }
-  chatRooms[roomCounter] = { title: shapes[roomCounter] };
-
-  const topic = player.currentGame.get("topic");
-
-  player.set("viewingRoom", roomCounter);
-  player.set("activeRoom", roomCounter);
-  player.currentGame.set("chatRooms", chatRooms);
-  player.currentGame.set("chatChannel-" + roomCounter, [
-    {
-      sender: "-1",
-      dt: new Date().getTime(),
-      content: prompts["prompt1"][topic],
-    },
-  ]);
-
-  for (
-    let minutePassed = 0;
-    minutePassed <= discussionMinutesElapsed;
-    minutePassed++
-  ) {
-    let nextPrompt = "";
-    if (minutePassed == gameParams["followupDelay1"]) {
-      nextPrompt = prompts["prompt2"][topic];
-      const msgs = player.currentGame.get("chatChannel-" + roomCounter) || [];
-
-      player.currentGame.set("chatChannel-" + roomCounter, [
-        ...msgs,
-        {
-          sender: "-1",
-          dt: new Date().getTime(),
-          content: nextPrompt,
-        },
-      ]);
-    }
-
-    if (
-      minutePassed ==
-      gameParams["followupDelay1"] + gameParams["followupDelay2"]
-    ) {
-      nextPrompt = prompts["prompt3"][topic];
-      const msgs = player.currentGame.get("chatChannel-" + roomCounter) || [];
-
-      player.currentGame.set("chatChannel-" + roomCounter, [
-        ...msgs,
-        {
-          sender: "-1",
-          dt: new Date().getTime(),
-          content: nextPrompt,
-        },
-      ]);
-    }
-
-    if (minutePassed == gameParams["switchRoomDelay"]) {
-      nextPrompt =
-        "(Reminder) You can check out other chat rooms at any time and switch to whichever you feel most comfortable in! If you switch, please introduce yourself and add on to the discussion.";
-      const msgs = player.currentGame.get("chatChannel-" + roomCounter) || [];
-
-      player.currentGame.set("chatChannel-" + roomCounter, [
-        ...msgs,
-        {
-          sender: "-1",
-          dt: new Date().getTime(),
-          content: nextPrompt,
-        },
-      ]);
-    }
-  }
-
-  roomCounter += 1;
 });
 
 Empirica.on("player", "resetInactivity", (_, { player, resetInactivity }) => {
@@ -565,6 +777,7 @@ Empirica.on(
             Pay heed to the participant's previous message style and word structure so it feels adapted to them.
             You must follow the standard of casual conversations -- so that it is not too wordy and formal.
             Do NOT make the suggestions too long (1/2 sentences at max). 
+            Do NOT include '${PID}$:' in your suggestions.
 
             Your response must follow the JSON format: 
             {"SuggestionReasoning": Your reasoning, "Suggestion": {your suggestion for ${PID}$} } }`,
@@ -600,7 +813,8 @@ Empirica.on(
             Try to keep the suggestion as short as possible.
             Pay heed to the participant's previous message style and word structure so it feels adapted to them.
             You must follow the standard of casual conversations -- so that it is not too wordy and formal.
-            Do NOT make the suggestions too long (1/2 sentences at max). 
+            Do NOT make the suggestions too long (1/2 sentences at max).
+            Do NOT include '${PID}$:' in your suggestions. 
 
             Your response must follow the JSON format: 
             { "Rate": {"Tone": ..., "Respectfulness": ..., .... }, 
@@ -655,7 +869,8 @@ Empirica.on(
             Try to keep the suggestion as short as possible.
             Pay heed to the participant's previous message style and word structure so it feels adapted to them.
             You must follow the standard of casual conversations -- so that it is not too wordy and formal.
-            Do NOT make the suggestions too long (1/2 sentences at max). 
+            Do NOT make the suggestions too long (1/2 sentences at max).
+            Do NOT include '${PID}$:' in your suggestions.
 
             Your response must follow the JSON format: 
             { "Rate": {"Tone": ..., "Respectfulness": ..., .... }, 
@@ -669,7 +884,7 @@ Empirica.on(
       if (prompt !== "") {
         try {
           const completion = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: "gpt-4o",
             messages: prompt,
             store: false,
           });
@@ -716,6 +931,13 @@ Empirica.onGameStart(({ game }) => {
   }
 
   // Get participants who passed all preceding steps
+  // ToDo: end players if total number of participants is below a minimum
+  for (const player of game.players) {
+    // if (!readyPlayerList.has(player.id)) {
+    //   player.set("ended", true);
+    //   player.set("endReason", "not-ready");
+    //   continue;
+    }
 
   // const waitingPlayers = game.players.filter((p) => p.get("surveyAnswers"));
   // const notReadyPlayers = game.players.filter((p) => !p.get("surveyAnswers"));

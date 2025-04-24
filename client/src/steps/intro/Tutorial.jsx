@@ -167,7 +167,7 @@ export default function Tutorial({ next }) {
     setErrorDisplay("none");
 
     if (
-      !(step == 1 || step == 2 || step == 5 || step == 6) ||
+      !(step == 1 || step == 2 || step == 5) ||
       radioButtonVals["q" + step] == correctAnswers[step]
     ) {
       if (step == 7) {
@@ -234,15 +234,10 @@ export default function Tutorial({ next }) {
       <Stack gap={3}>
         <Typography variant="h1" sx={{}}></Typography>
         <img src="assets/overview.png" style={{ width: "80%", aspectRatio: "3", margin: "0 auto", display: "block" }} />
-        {/* <Typography variant="h2" sx={{}}>
-          Steps
-        </Typography> */}
-        <img src="assets/tutorial_study-steps.svg" style={{ height: "12em" }} />
-        
         <Typography variant="body1">
-          This study has three parts. Each part has a set timer, and the entire
+          This study has three parts. The entire
           study will take {gameParams.studyTime} minutes to complete. You will
-          have an opportunity to earn extra money based on your performance. The rest of this tutorial will guide you through each step of the study.
+          have an opportunity to earn extra money based on your performance.
         </Typography>
         <FormControl sx={{ pt: 4 }}>
           <FormLabel>What is the purpose of this study?</FormLabel>
@@ -260,6 +255,7 @@ export default function Tutorial({ next }) {
     tutorialStepUI = (
       <Stack gap={3}>
         <Typography variant="h1">Step 1 Tutorial: Survey</Typography>
+        <img src="assets/step_1.svg" style={{ height: "8em" }}/>
         <Typography variant="body1">
           First, you will complete a brief survey of your opinions.
         </Typography>
@@ -286,16 +282,38 @@ export default function Tutorial({ next }) {
       </Stack>
     );
   } else if (step == 4) {
+    const tutorialTask = player.get("tutorialTask") || 1;
+    const tasks = [
+      {
+        id: 1,
+        text: "Join the #tutorial-room and send a message that says: 'Hello!'",
+        completed: tutorialTask > 1
+      },
+      {
+        id: 2,
+        text: "Accept the AI suggestion by clicking on the green box",
+        completed: tutorialTask > 2
+      },
+      {
+        id: 3,
+        text: "Join a different group by clicking 'Join' on another room",
+        completed: tutorialTask > 3
+      },
+      {
+        id: 4,
+        text: "Create a new group by clicking 'Create new room'",
+        completed: tutorialTask > 4
+      }
+    ];
+
     tutorialStepUI = (
       <Stack gap={3}>
         <Typography variant="h1">Step 2 Tutorial: Group Discussion</Typography>
+        <img src="assets/step_2.svg" style={{ height: "8em" }}/>
         <Typography variant="body1">
           After all participants join in, you will be placed in a chat room with other participants and a
           chatbot moderator. Multiple rooms will be created by default and you
           can move about them freely.
-          <br />
-          <br />
-          By clicking "Join" at the top of the chat window, you can join a room.
           <br />
         </Typography>
         <Container
@@ -371,18 +389,28 @@ export default function Tutorial({ next }) {
             boxShadow: "1px 1px 3px rgba(0,0,0,0.3)",
           }}
         >
-          <ChatRoom />
+        <ChatRoom/>
         </Container>
-        <b style={{ display: !passedTutorialMessage ? "block" : "none" }}>
-          Join the #tutorial-room and send a message that says: "Hello!"
-        </b>
+        <Stack gap={2}>
+          {tasks.map((task) => (
+            <Typography
+              key={task.id}
+              variant="body1"
+              sx={{
+                color: task.completed ? "success.main" : task.id === tutorialTask ? "primary.main" : "text.secondary",
+                fontWeight: task.id === tutorialTask ? "bold" : "normal"
+              }}
+            >
+              {task.id}. {task.text}
+            </Typography>
+          ))}
+        </Stack>
         <Alert
           variant="standard"
           severity="success"
           sx={{ display: passedTutorialMessage ? "flex" : "none" }}
         >
-          Great job! We received your message. You may now proceed to the next
-          step.
+          Great job! You've completed all the tutorial tasks. You may now proceed to the next step.
         </Alert>
       </Stack>
     );
@@ -390,13 +418,20 @@ export default function Tutorial({ next }) {
     tutorialStepUI = (
       <Stack gap={3}>
         <Typography variant="h1">Step 3 Tutorial: Summary Task</Typography>
+        <img src="assets/step_3.svg" style={{ height: "8em" }}/>
         <Typography variant="body1">
           After the timer elapses you will be asked to summarize the contents of
           your discussion, including the contributions of all other members of
           your room. Your bonus will be calculated as follows:
         </Typography>
-
-        <img src="assets/tutorial_bonus.svg" style={{ height: "15em" }} />
+        <img src="assets/tutorial_bonus.svg" style={{ height: "4em" }} />
+        <Typography variant="body1">
+          To earn maximized bonus, please take care to thoroughly summarize the discussion of the last chat room
+          you join. We expect summaries to be about 100 &ndash;150 words in
+          length and to reiterate the viewpoints of all of the participants in
+          the room.
+        </Typography>
+        <img src="assets/tutorial_tip-summary2.svg" style={{ height: "8em" }} />
 
         <Typography variant="body1">
           {/* Note that joining a chat room with many members has the highest
@@ -404,8 +439,6 @@ export default function Tutorial({ next }) {
           perform equally well.  */}
           If your bonus is calculated to be $0.00 or
           lower, we will provide only the base pay for this study.
-          <br />
-          <br />
           Regardless of the result of the calculation above,{" "}
           <b>
             the maximum bonus you can receive is{" "}
@@ -430,10 +463,9 @@ export default function Tutorial({ next }) {
   } else if (step == 6) {
     tutorialStepUI = (
       <Stack gap={3} alignItems={"baseline"} id="tutorialTips">
-        <Typography variant="h1">Strategy and Tips</Typography>
+        <Typography variant="h1">Tips for Success</Typography>
         <Typography variant="body1">
-          You can move between chat rooms freely during the group discussion
-          task of this study. Here are some tips to guide your choices:
+        Want to maximize your bonus and enjoy the task? Try these suggestions:
         </Typography>
         <Paper
           elevation={0}
@@ -445,19 +477,13 @@ export default function Tutorial({ next }) {
             gap: "1em",
           }}
         >
-          <img
-            src="assets/tutorial_tip-big-room.svg"
-            style={{ height: "8em" }}
-          />
           <Typography variant="h3">
-            1. Bigger rooms are (sometimes) better
+            1. Find your group
           </Typography>
           <Typography variant="body1">
-            To get the highest reward for completing this study, it pays to join
-            a bigger room. However, your bonus is also determined by the quality
-            of the summary produced by the other members of your room.
+            Your bonus depends on both your summary and your chatmates' in the last round. Feel free to switch rooms to find a team you trust and work well with.
           </Typography>
-          
+          <img src="assets/tutorial_tip-last.svg" style={{ height: "8em" }}/>
         </Paper>
         <Paper
           elevation={0}
@@ -469,14 +495,11 @@ export default function Tutorial({ next }) {
             gap: "1em",
           }}
         >
+          <Typography variant="h3">2. Go solo if needed</Typography>
+          <Typography variant="body1">
+            Can't find a good group? You can start a room with just you and a chatbot. Submit your report to get a guaranteed {formatMoney(gameParams.bonusPerParticipant)} bonus.
+          </Typography>
           <img src="assets/tutorial_tip-alone.svg" style={{ height: "8em" }} />
-          <Typography variant="h3">2. You can be alone</Typography>
-          <Typography variant="body1">
-            You may create a chat room with just you and a chatbot moderator,
-            with a guaranteed bonus of
-            {formatMoney(gameParams.bonusPerParticipant)} if you effectively
-            summarize your discussion with the bot.
-          </Typography>
         </Paper>
         <Paper
           elevation={0}
@@ -488,52 +511,15 @@ export default function Tutorial({ next }) {
             gap: "1em",
           }}
         >
-          <img src="assets/tutorial_tip-last.svg" style={{ height: "8em" }} />
           <Typography variant="h3">
-            3. Remember the last room you join
+            3. Stay active and respectful
           </Typography>
 
           <Typography variant="body1">
-            Your summary and bonus will be calculated based on the last chat room you join.
+            Inactive users will get a warning and may be removed. Inappropriate language will result in removal and a report to Prolific.
           </Typography>
+          <img src="assets/tips-group.svg" style={{ height: "8em" }} />
         </Paper>
-        <Paper
-          elevation={0}
-          sx={{
-            p: 0,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "baseline",
-            gap: "1em",
-          }}
-        >
-          <img
-            src="assets/tutorial_tip-summary2.svg"
-            style={{ width: "100%" }}
-          />
-          <Typography variant="h3">
-            4. Most importantly, write a good summary
-          </Typography>
-          <Typography variant="body1">
-            To earn maximized bonus, please take care to thoroughly summarize the discussion of the last chat room
-            you join. We expect summaries to be about 100 &ndash;150 words in
-            length and to reiterate the viewpoints of all of the participants in
-            the room.
-          </Typography>
-        </Paper>
-        <FormControl sx={{ pt: 4 }}>
-          <FormLabel>
-            Which chat room will you be considered a member of when your summary
-            is evaluated?
-          </FormLabel>
-          <RadioGroup
-            name="q6"
-            onChange={handleRadioButtonChange}
-            value={radioButtonVals["q6"]}
-          >
-            {q6RadioButtons}
-          </RadioGroup>
-        </FormControl>
       </Stack>
     );
   } else if (step == 7) {

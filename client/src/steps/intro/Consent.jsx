@@ -113,7 +113,7 @@ export default function Consent({ next }) {
         <Paper
           variant="outlined"
           sx={{
-            maxHeight: "10em",
+            maxHeight: "20em",
             overflow: "scroll",
             p: 4,
             my: 2,
