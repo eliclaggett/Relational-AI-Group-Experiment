@@ -65,9 +65,10 @@ export default function ChatRoom({}) {
   const stage = useStage();
   const stageName = stage?.get("name") || "intro";
   const gameParams = game.get("gameParams");
-  const suggestion = player.get("suggestedReply") || {
+  const suggestion = player.get("suggestedReply");
+  /* || {
     content: "AI Suggestion",
-  };
+  };*/
   const participantIdx = player.get("participantIdx");
   const participantStep = player.get("step") || "";
   const viewingRoom = player.get("viewingRoom") || 0;
@@ -85,6 +86,8 @@ export default function ChatRoom({}) {
   const [drafts, setDrafts] = useState({});
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [receivedCompletion, setReceivedCompletion] = useState(false);
+  const roomLocked = player.get("roomLocked") || false;
+  const canSendMessages = player.get("canSendMessages") !== false;
   let self = {};
 
   for (const idx in chatParticipants) {
@@ -95,7 +98,7 @@ export default function ChatRoom({}) {
 
   const selfLastActiveDiff = (new Date().getTime() - self.active) / 1000;
   if (
-    participantStep == "group-discussion" &&
+    participantStep.includes("group-discussion") &&
     selfLastActiveDiff > gameParams.inactivityMax
   ) {
     player.set("ended", true);
@@ -119,8 +122,8 @@ export default function ChatRoom({}) {
   useEffect(() => {
     setReceivedCompletion(false);
     // Request AI assistance for every new message
-    if (
-      stageName == "group-discussion" &&
+    if (messages &&
+      stageName.includes("group-discussion") &&
       messages[messages.length - 1].sender != participantIdx
     ) {
       console.log("requesting assistance");
@@ -129,7 +132,7 @@ export default function ChatRoom({}) {
   }, [messages]);
 
   useEffect(() => {
-    if (suggestion.id > player.get("lastRequestID")) {
+    if (suggestion && suggestion.id > player.get("lastRequestID")) {
       player.set("lastRequestID", suggestion.id);
       setReceivedCompletion(true);
     }
@@ -151,7 +154,12 @@ export default function ChatRoom({}) {
     }
   }
   function handleSend() {
-    if (stageName == "group-discussion") {
+    if (!canSendMessages) {
+      setTooltipOpen(true);
+      return;
+    }
+
+    if (stageName.startsWith("group-discussion")) {
       game.set("chatChannel-" + activeRoom, [
         ...messages,
         {
@@ -202,7 +210,7 @@ export default function ChatRoom({}) {
             src={
               msg.sender == "-1"
                 ? "/assets/ai0.svg"
-                : "/assets/animal_icons/" + /*sender.name*/ "cobra" + ".svg"
+                : "/assets/animal_icons/" + sender.name + ".svg"
             }
             style={{ backgroundColor: sender.color }}
           />
@@ -250,7 +258,7 @@ export default function ChatRoom({}) {
           roomParticipants.push(chatParticipants[idx]);
         }
       } else if (
-        participantStep == "group-discussion" &&
+        participantStep.includes("group-discussion") &&
         chatParticipants[idx].room == viewingRoom
       ) {
         roomParticipants.push(chatParticipants[idx]);
@@ -362,7 +370,11 @@ export default function ChatRoom({}) {
         <List dense={false} className="roomList">
           {generateRoomListItems(rooms)}
         </List>
-        <Button className="newRoomButton" onClick={showNewRoomModal}>
+        <Button 
+          className="newRoomButton" 
+          onClick={showNewRoomModal}
+          disabled={roomLocked}
+        >
           Create new room <AddIcon />
         </Button>
       </Container>
@@ -391,7 +403,7 @@ export default function ChatRoom({}) {
             <Button
               onClick={joinRoom}
               variant="outlined"
-              className={activeRoom == viewingRoom ? "hidden" : ""}
+              className={activeRoom == viewingRoom || roomLocked ? "hidden" : ""}
             >
               Join
             </Button>
@@ -407,12 +419,13 @@ export default function ChatRoom({}) {
         <Container sx={{ display: "flex" }} className="msgFooter">
           <TextField
             className="msgText"
-            placeholder="Message #chat"
+            placeholder={canSendMessages ? "Message #chat" : "Messaging is disabled during transition period"}
             variant="outlined"
             onChange={handleMsgChange}
             onKeyDownCapture={handleKeyDown}
-            helperText="Shift + Return to add a new line"
+            helperText={canSendMessages ? "Shift + Return to add a new line" : "You can message again when the next round starts"}
             multiline
+            disabled={!canSendMessages}
             slotProps={{ input: { sx: { borderRadius: "2em" } } }}
           />
           <Tooltip
@@ -420,7 +433,9 @@ export default function ChatRoom({}) {
             onOpen={() => setTooltipOpen(true)}
             onClose={() => setTooltipOpen(false)}
             title={
-              viewingRoom != activeRoom
+              !canSendMessages
+                ? "Messaging is disabled during transition period"
+                : viewingRoom != activeRoom
                 ? "You must join the room to send a message"
                 : ""
             }
@@ -429,7 +444,7 @@ export default function ChatRoom({}) {
               <IconButton
                 variant="plain"
                 sx={{ minWidth: "2.5em", ml: "0.5em" }}
-                disabled={viewingRoom != activeRoom}
+                disabled={viewingRoom != activeRoom || !canSendMessages}
                 onClick={handleSend}
               >
                 <SendRounded />
@@ -460,15 +475,19 @@ export default function ChatRoom({}) {
           </span>
         </Container>
       ) : (
-        stageName !== "intro" ? (
+        stageName !== "intro" &&
+        gameParams.condition !== "control" &&
+        messages.some(msg => msg.sender === participantIdx.toString()) ? (
           <Container
             sx={{ p: "0em 1em 1em 1em !important", display: "flex" }}
           >
-            <div className="suggestion" onClick={handleCopySuggestion}>
-              {typeof suggestion.content === "object"
-                ? JSON.stringify(suggestion.content)
-                : suggestion.content}
-            </div>
+            {suggestion.content && suggestion.content !== "" && (
+              <div className="suggestion" onClick={handleCopySuggestion}>
+                {typeof suggestion.content === "object"
+                  ? JSON.stringify(suggestion.content)
+                  : suggestion.content}
+              </div>
+            )}
             <span>
               <IconButton
                 variant="plain"
@@ -513,7 +532,7 @@ export default function ChatRoom({}) {
               >
                 <Avatar
                   alt={self.name}
-                  src={"/assets/animal_icons/" + /*self.name*/ "beaver" + ".svg"}
+                  src={"/assets/animal_icons/" + self.name + ".svg"}
                   sx={{ bgcolor: self.color }}
                 />
               </Badge>
@@ -557,7 +576,7 @@ export default function ChatRoom({}) {
       </Dialog>
       <Dialog
         open={
-          stageName == "group-discussion" &&
+          stageName.includes("group-discussion") &&
           selfLastActiveDiff > gameParams.inactivityWarning
         }
         onClose={handleCancelTimeout}

@@ -42,30 +42,68 @@
     "topics": [
       "Living in Shadyside is better than living in Squirrel Hill",
       "Life is better without owning a car",
+      "Pittsburgh is actually a great place to spend your 20s",
+      "Eating iftar at home is better than eating at ICP.",
+      "UPitt cares about their students more than CMU"
+    ],
+    "prompt1": [
+      "Let's get straight to the point: If you had to pick between Shadyside and Squirrel Hill for the entirety of your PhD, which would you choose and why?",
+      "Owning a car in Pittsburgh: essential for survival, or a symbol of having fully assimilated into suburban despair?",
+      "If you're spending your 20s in Pittsburgh, are you making the best decision of your life or just putting off moving to a better city for as long as possible?",
+      "Where do you find more comfort to eat iftar?",
+      "Which one do you think have a better student community?"
+    ],
+    "prompt2": [
+      "Some people say Shadyside is just \"Oakland for people with generational wealth\" while others claim Squirrel Hill is only good if you're married with kids. Does the neighborhood you live in actually reflect your personality or life stage or is it just about convenience?",
+      "People love to say Pittsburgh is a \"walkable city\" but how much of that is just CMU grad students coping with the fact that they can't afford a car? Does not having a car make you more connected to the city... or just more trapped in your own little bubble?",
+      "Some people say Pittsburgh is the perfect city for your 20s because it's cheap. Others say it's perfect because there's nothing to do, so you're forced to focus on your work. Which version feels more true and why?",
+      "Which place has more variations?",
+      "What do you think of the work-life balance in CMU and UPitt?"
+    ],
+    "prompt3": [
+      "If CMU housing stipends were doubled overnight, would everyone still be fighting over these two neighborhoods or would half the student population quietly move to Bakery Square and never look back? What does that tell us about what people really value in Pittsburgh living?",
+      "In 50 years, will Pittsburgh be a walkable urban utopia... or will the self-driving Ubers just be circling around the same potholes while everyone in Shadyside still waits 25 minutes for the 64 bus?",
+      "Do you think you'd be a fundamentally different person if you were doing your PhD in New York, San Francisco, or Berlin instead of Pittsburgh? Is the city shaping us more than we realize... or are we all just temporarily occupying space here until we leave for somewhere cooler?",
+      "Do you think it takes too much time to commute to ICP?",
+      "Which one do you think have more perks for students?"
+    ]
+  },
+  "pgh2": {
+    "topics": [
+      "Living in Shadyside is better than living in Squirrel Hill",
+      "Life is better without owning a car",
       "CMU's culture of collaboration is a myth, it's actually cutthroat as hell",
       "Pittsburgh is actually a great place to spend your 20s",
-      "CMU PhD students are well adjusted"
+      "CMU PhD students are well adjusted",
+      "Eating iftar at home is better than eating at ICP.",
+      "UPitt cares about their students more than CMU"
     ],
     "prompt1": [
       "Let's get straight to the point: If you had to pick between Shadyside and Squirrel Hill for the entirety of your PhD, which would you choose and why?",
       "Owning a car in Pittsburgh: essential for survival, or a symbol of having fully assimilated into suburban despair?",
       "CMU loves to market itself as a collaborative environment but if collaboration is really the norm here, why does every group project feel like an unspoken competition for who can claim the most credit?",
       "If you're spending your 20s in Pittsburgh, are you making the best decision of your life or just putting off moving to a better city for as long as possible?",
-      "On a scale from 1 (sleeping in your lab every night) to 10 (work-life balance influencer), how well-adjusted would you say the average CMU PhD student is?"
+      "On a scale from 1 (sleeping in your lab every night) to 10 (work-life balance influencer), how well-adjusted would you say the average CMU PhD student is?",
+      "Where do you find more comfort to eat iftar?",
+      "Which one do you think have a better student community?"
     ],
     "prompt2": [
       "Some people say Shadyside is just \"Oakland for people with generational wealth\" while others claim Squirrel Hill is only good if you're married with kids. Does the neighborhood you live in actually reflect your personality or life stage or is it just about convenience?",
       "People love to say Pittsburgh is a \"walkable city\" but how much of that is just CMU grad students coping with the fact that they can't afford a car? Does not having a car make you more connected to the city... or just more trapped in your own little bubble?",
       "Is the cutthroat culture at CMU something the university engineers on purpose to maintain its reputation... or is it just what happens when you concentrate too many anxious overachievers in one place?",
       "Some people say Pittsburgh is the perfect city for your 20s because it's cheap. Others say it's perfect because there's nothing to do, so you're forced to focus on your work. Which version feels more true and why?",
-      "Is the whole idea of being a \"well-adjusted PhD student\" just a coping mechanism for people who have fully given up on having a personality outside their research? Or is there actually something uniquely healthy about the way CMU students navigate work, life, and mental health?"
+      "Is the whole idea of being a \"well-adjusted PhD student\" just a coping mechanism for people who have fully given up on having a personality outside their research? Or is there actually something uniquely healthy about the way CMU students navigate work, life, and mental health?",
+      "Which place has more variations?",
+      "What do you think of the work-life balance in CMU and UPitt?"
     ],
     "prompt3": [
       "If CMU housing stipends were doubled overnight, would everyone still be fighting over these two neighborhoods or would half the student population quietly move to Bakery Square and never look back? What does that tell us about what people really value in Pittsburgh living?",
       "In 50 years, will Pittsburgh be a walkable urban utopia... or will the self-driving Ubers just be circling around the same potholes while everyone in Shadyside still waits 25 minutes for the 64 bus?",
       "If CMU actually had a stronger culture of collaboration, would it still be ranked as highly as it is or would a nicer, more supportive CMU just quietly slide down the rankings every year? Is competition what makes this place elite... or what holds it back?",
       "Do you think you'd be a fundamentally different person if you were doing your PhD in New York, San Francisco, or Berlin instead of Pittsburgh? Is the city shaping us more than we realize... or are we all just temporarily occupying space here until we leave for somewhere cooler?",
-      "Imagine a parallel universe where every CMU PhD student went to therapy before starting their PhD. What would this university's entire social ecosystem look like? Would we still produce the same quality of work or would the whole system collapse without low-level ambient suffering to fuel it?"
+      "Imagine a parallel universe where every CMU PhD student went to therapy before starting their PhD. What would this university's entire social ecosystem look like? Would we still produce the same quality of work or would the whole system collapse without low-level ambient suffering to fuel it?",
+      "Do you think it takes too much time to commute to ICP?",
+      "Which one do you think have more perks for students?"
     ]
   },
   "switchRooms": "(Friendly reminder) As we approach the halfway point of the group discussion, remember you can view and join other chat rooms freely, or create a room to start a new discussion from scratch."

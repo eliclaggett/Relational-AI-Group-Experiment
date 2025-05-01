@@ -216,8 +216,9 @@ const gameParams = {
   maxWaitTime: 5,
   inactivityMax: 150, // seconds
   inactivityWarning: 120, // seconds
-
-  chatTime: 4,
+  discussionPeriod: 0.3,
+  transitionPeriod: 0.5,
+  chatTime: 12,
   lobbyTime: 10,
   summaryTime: 5,
   followupDelay1: 2, // Send a followup message 2 minutes after the chat starts
@@ -294,8 +295,8 @@ Empirica.on("player", (ctx, { player, _ }) => {
 
   // Initialize base chat participants
   const baseParticipants = {
-    "-1": { name: "Moderator Bot", room: 0, color: "#f4f4f4", active: new Date().getTime() },
-    [playerCounter]: { name: "tutorial-user", room: 0, color: colors[playerCounter], active: new Date().getTime() }
+    "-1": { name: "Moderator Bot", room: -1, color: "#f4f4f4", active: new Date().getTime() },
+    [playerCounter]: { name: "hawk", room: 0, color: colors[playerCounter], active: new Date().getTime() }
   };
 
   // Set initial game state
@@ -365,26 +366,34 @@ Empirica.on(
       player.set("step", "tutorial");
       player.set("tutorialTask", 1);
 
-      // Add dummy participants for the tutorial
       const tutorialParticipants = {
-        "-1": { name: "Moderator Bot", room: 0, color: "#f4f4f4", active: new Date().getTime() },
+        "-1": { name: "Moderator Bot", room: -1, color: "#f4f4f4", active: new Date().getTime() },
         [player.get("participantIdx")]: { 
-          name: "tutorial-user", 
-          room: 0, 
+          name: "hawk", 
+          room: 0,
           color: player.get("color"), 
           active: new Date().getTime() 
         },
-        "dummy1": { name: "Alex", room: 0, color: "#A7C7E7", active: new Date().getTime() },
-        "dummy2": { name: "Jordan", room: 0, color: "#B39DDB", active: new Date().getTime() },
-        "dummy3": { name: "Taylor", room: 0, color: "#F2B0A2", active: new Date().getTime() }
+        "dummy1": { name: "duck", room: 0, color: "#A7C7E7", active: new Date().getTime() },
+        "dummy2": { name: "parrot", room: 0, color: "#B39DDB", active: new Date().getTime() },
+        "dummy3": { name: "jay", room: 0, color: "#F2B0A2", active: new Date().getTime() },
+        "dummy4": { name: "hedgehog", room: 1, color: "#A7C7E7", active: new Date().getTime() },
+        "dummy5": { name: "snail", room: 1, color: "#B39DDB", active: new Date().getTime() },
+        "dummy6": { name: "pelican", room: 1, color: "#F2B0A2", active: new Date().getTime() },
+        "dummy7": { name: "cobra", room: 2, color: "#A7C7E7", active: new Date().getTime() },
+        "dummy8": { name: "finch", room: 2, color: "#B39DDB", active: new Date().getTime() },
+        "dummy9": { name: "snapper", room: 2, color: "#F2B0A2", active: new Date().getTime() },
+        "dummy10": { name: "sandpiper", room: 3, color: "#A7C7E7", active: new Date().getTime() },
+        "dummy11": { name: "stork", room: 3, color: "#B39DDB", active: new Date().getTime() },
+        "dummy12": { name: "tapir", room: 3, color: "#F2B0A2", active: new Date().getTime() }
       };
 
       // Create initial chat rooms for the tutorial
       const tutorialRooms = {
-        0: { title: "tutorial-room", id: 0 },
-        1: { title: "group-1", id: 1 },
-        2: { title: "group-2", id: 2 },
-        3: { title: "group-3", id: 3 }
+        0: { title: 'tutorial-room', id: 0 },
+        1: { title: shapes[1], id: 1 },
+        2: { title: shapes[2], id: 2 },
+        3: { title: shapes[3], id: 3 }
       };
 
       // Initialize chat channels for tutorial
@@ -416,17 +425,17 @@ Empirica.on(
       // Add dummy messages to group-1
       player.set("chatChannel-1", [
         {
-          sender: "dummy1",
+          sender: "dummy4",
           dt: new Date().getTime() - 300000, // 5 minutes ago
           content: "I think we should focus on the environmental impact first."
         },
         {
-          sender: "dummy2",
+          sender: "dummy5",
           dt: new Date().getTime() - 240000, // 4 minutes ago
           content: "Yes, but we also need to consider the economic factors."
         },
         {
-          sender: "dummy3",
+          sender: "dummy6",
           dt: new Date().getTime() - 180000, // 3 minutes ago
           content: "Good point! Let's discuss both aspects."
         }
@@ -435,17 +444,17 @@ Empirica.on(
       // Add dummy messages to group-2
       player.set("chatChannel-2", [
         {
-          sender: "dummy1",
+          sender: "dummy7",
           dt: new Date().getTime() - 300000,
           content: "Has anyone read the latest research on this topic?"
         },
         {
-          sender: "dummy2",
+          sender: "dummy8",
           dt: new Date().getTime() - 240000,
           content: "Yes, I found some interesting studies about it."
         },
         {
-          sender: "dummy3",
+          sender: "dummy9",
           dt: new Date().getTime() - 180000,
           content: "Could you share those with us?"
         }
@@ -454,17 +463,17 @@ Empirica.on(
       // Add dummy messages to group-3
       player.set("chatChannel-3", [
         {
-          sender: "dummy1",
+          sender: "dummy10",
           dt: new Date().getTime() - 300000,
           content: "I have a different perspective on this issue."
         },
         {
-          sender: "dummy2",
+          sender: "dummy11",
           dt: new Date().getTime() - 240000,
           content: "I'd love to hear your thoughts!"
         },
         {
-          sender: "dummy3",
+          sender: "dummy12",
           dt: new Date().getTime() - 180000,
           content: "Yes, please share your viewpoint."
         }
@@ -658,30 +667,25 @@ Empirica.on("player", "acceptSuggestion", (_, { player }) => {
 });
 
 Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
+  console.log("1. create room initialization.");
   if (!createRoom) return;
-
+  // const participantStep = player.currentStage;
   const participantStep = player.get("step");
   const tutorialTask = player.get("tutorialTask");
-
+  console.log("2. create room triggered enabled." + participantStep);
   if (participantStep === "tutorial" && tutorialTask === 4) {
     // Create a new room for the tutorial
     const roomId = Object.keys(player.get("tutorialRooms") || {}).length;
-    const newRoom = { title: "new-group", id: roomId };
-    
+    const newRoom = { title: shapes[roomId], id: roomId };
     const tutorialRooms = player.get("tutorialRooms") || {};
     tutorialRooms[roomId] = newRoom;
     player.set("tutorialRooms", tutorialRooms);
-    
-    // Initialize chat channel for new room
     player.set("chatChannel-" + roomId, []);
-    
     // Update player's room state
     player.set("activeRoom", roomId);
     player.set("viewingRoom", roomId);
     player.set("tutorialTask", 5);
     player.set("passedTutorialMessage", true);
-    
-    // Add success message
     player.set("chatChannel-" + roomId, [
       {
         sender: "-1",
@@ -689,8 +693,25 @@ Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
         content: "Excellent! You've completed all the tutorial tasks. You may now proceed to the next step."
       }
     ]);
-    
     Empirica.flush();
+  }
+
+  else if (participantStep.includes("group-discussion-transition-")) {
+    console.log("3. create room triggered for: " + participantStep);
+    roomCounter += 1;
+    const newRoom = { title: shapes[roomCounter] };
+    chatRooms[roomCounter] = newRoom;
+    player.currentGame.set("chatRooms", chatRooms);
+    player.set("viewingRoom", roomCounter);
+    player.set("activeRoom", roomCounter);
+    player.currentGame.set("chatRooms", chatRooms);
+    player.currentGame.set("chatChannel-" + roomCounter, [
+      {
+        sender: "-1",
+        dt: new Date().getTime(),
+        content: 'We will start the conversation shortly.',
+      }
+    ]);
   }
 });
 
@@ -730,181 +751,194 @@ Empirica.on(
   "player",
   "requestAIAssistance",
   async (_, { player, requestAIAssistance }) => {
+    console.log('fired for a player with requestAIAssistance id', requestAIAssistance.id);
     if (requestAIAssistance.id > -1) {
-      const topics = [
-        "evolution being taught as a fact of biology",
-        "protecting the second amendment right to bear arms",
-        "funding the military",
-        "the idea that children are being indoctrinated at school with LGBT messaging",
-        "paying higher taxes to support climate change research",
-        "the idea that COVID-19 restrictions went too far",
-        "having stricter immigration requirements into the U.S.",
-      ];
-
-      let prompt = "";
+      const topics = gameParams.topics;
       let game_topic = topics[parseInt(player.currentGame.get("topic"))];
       let activeRoom = player.get("activeRoom");
       let previous_convo = player.currentGame.get("chatChannel-" + activeRoom);
       let PID = player.get("participantIdx");
 
       // Check if participant has sent any messages in the current room
-      const hasParticipantSentMessage = previous_convo.some(msg => msg.sender === PID.toString());
-      if (!hasParticipantSentMessage) return;
-
-      let opinion = player.get("surveyAnswers")[game_topic];
-      let chatLog = "";
-      for (const msg of previous_convo) {
-        chatLog += `${msg.sender}: ${msg.content}\n`;
-      }
-
-      if (gameParams.condition == "control") {
-        // no completion needed
-      } else if (gameParams.condition == "personal") {
-        prompt = [
-          {
-            role: "system",
-            content:
-              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
-          },
-          {
-            role: "user",
-            content: `Topic of conversation: ${game_topic}
-            Previous Conversation: ${chatLog}
-
-            Now suggest a message response for ${PID}$ who rated the discussion topic ${opinion}. 
-            Try to keep the suggestion as short as possible.
-            Pay heed to the participant's previous message style and word structure so it feels adapted to them.
-            You must follow the standard of casual conversations -- so that it is not too wordy and formal.
-            Do NOT make the suggestions too long (1/2 sentences at max). 
-            Do NOT include '${PID}$:' in your suggestions.
-
-            Your response must follow the JSON format: 
-            {"SuggestionReasoning": Your reasoning, "Suggestion": {your suggestion for ${PID}$} } }`,
-          },
-        ];
-      } else if (gameParams.condition == "relational-static") {
-        let group_opinion = player.currentGame.players
-          .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
-          .map(
-            (p) =>
-              `${p.get("participantIdx")}: ${
-                p.get("surveyAnswers")[game_topic]
-              }`
-          )
-          .join(", ");
-
-        prompt = [
-          {
-            role: "system",
-            content:
-              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
-          },
-          {
-            role: "user",
-            content: `Topic of conversation: ${game_topic}
-            Participants: ${group_opinion}
-            Previous Conversation: ${chatLog}
-
-            Rate the above conversation based on the following metrics: Tone (Pro/Against/Neutral), Respectfulness (0-5), Cooperativeness (0-5), and Social Awareness (0-5).
-            
-            Now suggest a message response for ${PID}$ so that the group is not polarized and respects others' opinions.
-            Apply principles of Cognitive dissonance theory to come up with your suggestions.
-            Try to keep the suggestion as short as possible.
-            Pay heed to the participant's previous message style and word structure so it feels adapted to them.
-            You must follow the standard of casual conversations -- so that it is not too wordy and formal.
-            Do NOT make the suggestions too long (1/2 sentences at max).
-            Do NOT include '${PID}$:' in your suggestions. 
-
-            Your response must follow the JSON format: 
-            { "Rate": {"Tone": ..., "Respectfulness": ..., .... }, 
-            "SuggestionReasoning": Your reasoning based on Cognitive Dissonance Theory, 
-            "Suggestion": {your suggestion for ${PID}$} } }
-            `,
-          },
-        ];
-      } else if (gameParams.condition == "relational-dynamic") {
-        let group_opinion = player.currentGame.players
-          .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
-          .map(
-            (p) =>
-              `${p.get("participantIdx")}: ${
-                p.get("surveyAnswers")[game_topic]
-              }`
-          )
-          .join(", ");
-
-        let prev_opinion = player.currentGame.players
-          .filter(
-            (p) =>
-              p.get("joinedRooms").includes(player.get("activeRoom")) &&
-              p.get("activeRoom") != player.get("activeRoom")
-          )
-          .map(
-            (p) =>
-              `${p.get("participantIdx")}: ${
-                p.get("surveyAnswers")[game_topic]
-              }`
-          )
-          .join(", ");
-
-        prompt = [
-          {
-            role: "system",
-            content:
-              "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
-          },
-          {
-            role: "user",
-            content: `Topic of conversation: ${game_topic}
-            Current Participants: ${group_opinion}
-            Previous Participants who have left the conversation (if any): ${prev_opinion}
-            Previous Conversation: ${chatLog}
-
-            Rate the above conversation based on the following metrics: Tone (Pro/Against/Neutral), Respectfulness (0-5), Cooperativeness (0-5), and Social Awareness (0-5).
-            
-            Now suggest a message response for ${PID}$ so that the group is not polarized and respects others' opinions.
-            You can pay attention to who has left the conversation and their previous messages as well to understand why they left and if you can prevent such abrupt leaving from happening again.
-            Apply principles of Cognitive dissonance theory to come up with your suggestions.
-            Try to keep the suggestion as short as possible.
-            Pay heed to the participant's previous message style and word structure so it feels adapted to them.
-            You must follow the standard of casual conversations -- so that it is not too wordy and formal.
-            Do NOT make the suggestions too long (1/2 sentences at max).
-            Do NOT include '${PID}$:' in your suggestions.
-
-            Your response must follow the JSON format: 
-            { "Rate": {"Tone": ..., "Respectfulness": ..., .... }, 
-            "SuggestionReasoning": Your reasoning based on Cognitive Dissonance Theory, 
-            "Suggestion": {your suggestion for ${PID}$} } }
-            `,
-          },
-        ];
-      }
-
-      if (prompt !== "") {
-        try {
-          const completion = await openai.chat.completions.create({
-            model: "gpt-4o",
-            messages: prompt,
-            store: false,
-          });
-
-          let reply = completion.choices[0].message["content"];
-          let parsed_reply = parseAIResponse(reply);
-
-          player.set("suggestedReply", {
-            id: parseInt(requestAIAssistance.id) + 1,
-            content: parsed_reply.Suggestion,
-          });
-
-          player.set("gtID", parseInt(requestAIAssistance.id) + 1);
-        } catch (error) {
-          console.error("Error getting AI assistance:", error);
-          player.set("suggestedReply", {
-            id: parseInt(requestAIAssistance.id) + 1,
-            content:
-              "I apologize, but I'm having trouble generating a suggestion right now. Please try again.",
-          });
+      // const hasParticipantSentMessage = previous_convo.some(msg => msg.sender === PID.toString());
+      const hasParticipantSentMessage = previous_convo.length > 0;
+      console.log('requestAIAssistance fired because.', PID, 'has no message in', previous_convo);
+      if (hasParticipantSentMessage)
+      {
+        console.log('requestAIAssistance processing.');
+        let opinion = player.get("surveyAnswers")[game_topic];
+        let chatLog = "";
+        for (const msg of previous_convo) {
+          chatLog += `${msg.sender}: ${msg.content}\n`;
         }
+
+        if (gameParams.condition == "control") {
+          // no completion needed
+        } else if (gameParams.condition == "personal") {
+          prompt = [
+            {
+              role: "system",
+              content:
+                "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
+            },
+            {
+              role: "user",
+              content: `Topic of conversation: ${game_topic}
+              Previous Conversation: ${chatLog}
+
+              Now suggest a message response for ${PID}$ who rated the discussion topic ${opinion}. 
+              Try to keep the suggestion as short as possible.
+              Pay heed to the participant's previous message style and word structure so it feels adapted to them.
+              You must follow the standard of casual conversations -- so that it is not too wordy and formal.
+              Do NOT make the suggestions too long (1/2 sentences at max). 
+              Do NOT include '${PID}$:' in your suggestions.
+
+              Your response must follow the JSON format: 
+              {"SuggestionReasoning": Your reasoning, "Suggestion": {your suggestion for ${PID}$} } }`,
+            },
+          ];
+        } else if (gameParams.condition == "relational-static") {
+          let group_opinion = player.currentGame.players
+            .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
+            .map(
+              (p) =>
+                `${p.get("participantIdx")}: ${
+                  p.get("surveyAnswers")[game_topic]
+                }`
+            )
+            .join(", ");
+
+          prompt = [
+            {
+              role: "system",
+              content:
+                "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
+            },
+            {
+              role: "user",
+              content: `Topic of conversation: ${game_topic}
+              Participants: ${group_opinion}
+              Previous Conversation: ${chatLog}
+
+              Rate the above conversation based on the following metrics: Tone (Pro/Against/Neutral), Respectfulness (0-5), Cooperativeness (0-5), and Social Awareness (0-5).
+              
+              Now suggest a message response for ${PID}$ so that the group is not polarized and respects others' opinions.
+              Apply principles of Cognitive dissonance theory to come up with your suggestions.
+              Try to keep the suggestion as short as possible.
+              Pay heed to the participant's previous message style and word structure so it feels adapted to them.
+              You must follow the standard of casual conversations -- so that it is not too wordy and formal.
+              Do NOT make the suggestions too long (1/2 sentences at max).
+              Do NOT include '${PID}$:' in your suggestions. 
+
+              Your response must follow the JSON format: 
+              { "Rate": {"Tone": ..., "Respectfulness": ..., .... }, 
+              "SuggestionReasoning": Your reasoning based on Cognitive Dissonance Theory, 
+              "Suggestion": {your suggestion for ${PID}$} } }
+              `,
+            },
+          ];
+        } else if (gameParams.condition == "relational-dynamic") {
+          let group_opinion = player.currentGame.players
+            .filter((p) => p.get("activeRoom") == player.get("activeRoom"))
+            .map(
+              (p) =>
+                `${p.get("participantIdx")}: ${
+                  p.get("surveyAnswers")[game_topic]
+                }`
+            )
+            .join(", ");
+
+          let prev_opinion = player.currentGame.players
+            .filter(
+              (p) =>
+                p.get("joinedRooms").includes(player.get("activeRoom")) &&
+                p.get("activeRoom") != player.get("activeRoom")
+            )
+            .map(
+              (p) =>
+                `${p.get("participantIdx")}: ${
+                  p.get("surveyAnswers")[game_topic]
+                }`
+            )
+            .join(", ");
+
+          prompt = [
+            {
+              role: "system",
+              content:
+                "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
+            },
+            {
+              role: "user",
+              content: `Topic of conversation: ${game_topic}
+              Current Participants: ${group_opinion}
+              Previous Participants who have left the conversation (if any): ${prev_opinion}
+              Previous Conversation: ${chatLog}
+
+              Rate the above conversation based on the following metrics: Tone (Pro/Against/Neutral), Respectfulness (0-5), Cooperativeness (0-5), and Social Awareness (0-5).
+              
+              Now suggest a message response for ${PID}$ so that the group is not polarized and respects others' opinions.
+              You can pay attention to who has left the conversation and their previous messages as well to understand why they left and if you can prevent such abrupt leaving from happening again.
+              Apply principles of Cognitive dissonance theory to come up with your suggestions.
+              Try to keep the suggestion as short as possible.
+              Pay heed to the participant's previous message style and word structure so it feels adapted to them.
+              You must follow the standard of casual conversations -- so that it is not too wordy and formal.
+              Do NOT make the suggestions too long (1/2 sentences at max).
+              Do NOT include '${PID}$:' in your suggestions.
+
+              Your response must follow the JSON format: 
+              { "Rate": {"Tone": ..., "Respectfulness": ..., .... }, 
+              "SuggestionReasoning": Your reasoning based on Cognitive Dissonance Theory, 
+              "Suggestion": {your suggestion for ${PID}$} } }
+              `,
+            },
+          ];
+        }
+
+        console.log('passed all checks');
+        if (prompt !== "") {
+          try {
+            const completion = await openai.chat.completions.create({
+              model: "gpt-4o",
+              messages: prompt,
+              store: false,
+            });
+
+            let reply = completion.choices[0].message["content"];
+            let parsed_reply = parseAIResponse(reply);
+
+            player.set("suggestedReply", {
+              id: parseInt(requestAIAssistance.id) + 1,
+              content: parsed_reply.Suggestion,
+            });
+
+            player.set("gtID", parseInt(requestAIAssistance.id) + 1);
+          } catch (error) {
+            console.error("Error getting AI assistance:", error);
+            player.set("suggestedReply", {
+              id: parseInt(requestAIAssistance.id) + 1,
+              content:
+                "I apologize, but I'm having trouble generating a suggestion right now. Please try again.",
+            });
+          }
+        }
+      } 
+      else {
+        // FIRST MESSAGE CASE — return a stub reply
+        const fallbackID = parseInt(requestAIAssistance.id) + 1;
+
+        player.set("suggestedReply", {
+          id: fallbackID,
+          content: "", // blank suggestion
+        });
+
+        player.set("gtID", fallbackID);
+        player.set("lastRequestID", requestAIAssistance.id);
+
+        console.log(
+          "Skipped AI suggestion (first message), but returned stub suggestion with id",
+          fallbackID
+        );
       }
     }
   }
@@ -913,222 +947,250 @@ Empirica.on(
 Empirica.onGameStart(({ game }) => {
   const round = game.addRound({ name: "round" });
   round.addStage({ name: "ready", duration: 30 }); // 30 seconds
-  round.addStage({
-    name: "group-discussion",
-    duration: gameParams.chatTime * 60,
-  }); // 10 minutes
+  
+  // Add three conversation rounds with transitions only after first two
+  for (let i = 1; i <= 3; i++) {
+    round.addStage({
+      name: `group-discussion-${i}`, 
+      duration: gameParams.discussionPeriod * 60 
+    });
+    if (i < 3) { 
+      round.addStage({ 
+        name: `group-discussion-transition-${i}`, 
+        duration: gameParams.transitionPeriod * 60 
+      });
+    }
+  }
+  
   round.addStage({
     name: "summary-task",
     duration: gameParams.summaryTime * 60,
-  }); // 3 minutes
+  });
 
   game.set("chatRooms", chatRooms);
   game.set("started", true);
   game.set("chatParticipants", chatParticipants);
+  game.set("currentRound", 1);
   for (const idx in chatRooms) {
     game.set("chatChannel-" + idx, []);
   }
-
-  // Get participants who passed all preceding steps
-  // ToDo: end players if total number of participants is below a minimum
-  for (const player of game.players) {
-    // if (!readyPlayerList.has(player.id)) {
-    //   player.set("ended", true);
-    //   player.set("endReason", "not-ready");
-    //   continue;
-    }
-
-  // const waitingPlayers = game.players.filter((p) => p.get("surveyAnswers"));
-  // const notReadyPlayers = game.players.filter((p) => !p.get("surveyAnswers"));
-
-  // for (const player of notReadyPlayers) {
-  //   player.set("ended", true);
-  //   player.set("endReason", "not-reach-lobby");
-  // }
-
-  for (const player of game.players) {
-    player.set("step", "ready");
-  }
 });
-
-Empirica.onRoundStart(({ round }) => {});
 
 Empirica.onStageStart(({ stage }) => {
   const stageName = stage.get("name");
   console.log("stage started: " + stageName);
-  if (stageName == "group-discussion") {
-    console.log("initializing chat");
-    const remainingPlayers = stage.currentGame.players.filter((p) =>
-      p.get("ready")
-    );
-
-    const notReadyPlayers = stage.currentGame.players.filter(
-      (p) => p.get("ready") != true
-    );
-    for (let i = 0; i < notReadyPlayers.length; i++) {
-      notReadyPlayers[i].set("ended", true);
-      notReadyPlayers[i].set("endReason", "not-ready");
-    }
-
-    // Decide topic
-    // Get highest polarization topic from surveyAnswers
-    const answersPerQuestion = {};
-    const entropyPerQuestion = {};
-    gameParams.topics.forEach((_, index) => {
-      answersPerQuestion[index] = [];
-    });
-    gameParams.topics.forEach((_, index) => {
-      entropyPerQuestion[index] = 0;
-    });
-
-    for (const player of remainingPlayers) {
-      const answers = player.get("surveyAnswers");
-      for (const k in answers) {
-        answersPerQuestion[k].push(parseInt(answers[k]));
+  
+  // Update all players' step to match the current stage
+  for (const player of stage.currentGame.players) {
+    player.set("step", stageName);
+  }
+  
+  if (stageName.startsWith("group-discussion-") && !stageName.includes("transition")) {
+    const roundNum = parseInt(stageName.split("-")[2]);
+    stage.currentGame.set("currentRound", roundNum);
+    
+    // If this is the first conversation round, assign rooms
+    if (roundNum === 1) {
+      const remainingPlayers = stage.currentGame.players.filter((p) => p.get("ready"));
+      const notReadyPlayers = stage.currentGame.players.filter(
+        (p) => p.get("ready") != true
+      );
+      for (let i = 0; i < notReadyPlayers.length; i++) {
+        notReadyPlayers[i].set("ended", true);
+        notReadyPlayers[i].set("endReason", "not-ready");
       }
-    }
+    
+      // Decide topic based on survey responses
+      const answersPerQuestion = {};
+      const entropyPerQuestion = {};
+      gameParams.topics.forEach((_, index) => {
+        answersPerQuestion[index] = [];
+        entropyPerQuestion[index] = 0;
+      });
 
-    for (const k in entropyPerQuestion) {
-      entropyPerQuestion[k] = calculateEntropyFromData(answersPerQuestion[k]);
-    }
-
-    maxEntropyKs = [0];
-    maxEntropyV = 0;
-    for (const k in entropyPerQuestion) {
-      if (entropyPerQuestion[k] > maxEntropyV) {
-        maxEntropyV = entropyPerQuestion[k];
-        maxEntropyKs = [k];
-      } else if (entropyPerQuestion[k] == maxEntropyV) {
-        maxEntropyKs.push(k);
-      }
-    }
-
-    // Select random topic with max entropy
-    const topic = maxEntropyKs[Math.floor(Math.random() * maxEntropyKs.length)];
-    stage.currentGame.set("topic", topic);
-
-    // Create chat rooms
-    console.log("remaining players: " + remainingPlayers.length);
-    let numCreatedGroups = 0;
-    for (let i = 0; i < remainingPlayers.length; i++) {
-      // Create a new chat room when the previous is full
-      const targetNumParticipants =
-        remainingPlayers.length > 5
-          ? initialGroupsBySampleSize[remainingPlayers.length][numCreatedGroups]
-          : targetParticipantsPerGroup;
-
-      if (i % targetNumParticipants == 0) {
-        roomCounter += 1;
-        chatRooms[roomCounter] = { title: shapes[roomCounter] };
+      for (const player of remainingPlayers) {
+        const answers = player.get("surveyAnswers");
+        for (const k in answers) {
+          answersPerQuestion[k].push(parseInt(answers[k]));
+        }
       }
 
-      // Place players in the new chat room
-      const playerIdx = remainingPlayers[i].get("participantIdx");
-      remainingPlayers[i].set("viewingRoom", roomCounter);
-      remainingPlayers[i].set("activeRoom", roomCounter);
-      chatParticipants[playerIdx].room = roomCounter;
-      // Set all participants as active
-      chatParticipants[playerIdx].active = new Date().getTime();
-    }
-    roomCounter += 1;
-    stage.currentGame.set("chatRooms", chatRooms);
-    stage.currentGame.set("chatParticipants", chatParticipants);
+      for (const k in entropyPerQuestion) {
+        entropyPerQuestion[k] = calculateEntropyFromData(answersPerQuestion[k]);
+      }
+
+      let maxEntropyKs = [0];
+      let maxEntropyV = 0;
+      for (const k in entropyPerQuestion) {
+        if (entropyPerQuestion[k] > maxEntropyV) {
+          maxEntropyV = entropyPerQuestion[k];
+          maxEntropyKs = [k];
+        } else if (entropyPerQuestion[k] == maxEntropyV) {
+          maxEntropyKs.push(k);
+        }
+      }
+
+      const topic = maxEntropyKs[Math.floor(Math.random() * maxEntropyKs.length)];
+      stage.currentGame.set("topic", topic);
+      // Create chat rooms based on remaining players
+      let numCreatedGroups = 0;
+      roomCounter = -1;
+      for (let i = 0; i < remainingPlayers.length; i++) {
+        // Create a new chat room when the previous is full
+        const targetNumParticipants =
+          remainingPlayers.length > 5
+            ? initialGroupsBySampleSize[remainingPlayers.length][numCreatedGroups]
+            : targetParticipantsPerGroup;
+  
+        if (i % targetNumParticipants == 0) {
+          roomCounter += 1;
+          chatRooms[roomCounter] = { title: shapes[roomCounter] };
+          numCreatedGroups++;
+        }
+  
+        // Place players in the new chat room
+        const playerIdx = remainingPlayers[i].get("participantIdx");
+        remainingPlayers[i].set("viewingRoom", roomCounter);
+        remainingPlayers[i].set("activeRoom", roomCounter);
+        chatParticipants[playerIdx] = {
+          name: remainingPlayers[i].get("selfIdentity"),
+          room: roomCounter,
+          color: remainingPlayers[i].get("color"),
+          active: new Date().getTime()
+        };
+      }
+      stage.currentGame.set("chatRooms", chatRooms);
+      stage.currentGame.set("chatParticipants", chatParticipants);
+  }
 
     // Send initial chatbot messages
-    // Send initial messages
-
+    let topic = stage.currentGame.get("topic");
     for (const k of Object.keys(chatRooms)) {
-      const msgs = [];
-      // msgs.push({
-      //   sender: "-1",
-      //   dt: new Date().getTime(),
-      //   content: botTexts["welcomeMessage"],
-      // });
-
+      let msgs = stage.currentGame.get("chatChannel-" + k) || [];
+      if (roundNum === 1) {
+        msgs = [];
+      }
       msgs.push({
         sender: "-1",
         dt: new Date().getTime(),
-        content: prompts["prompt1"][topic],
+        content: prompts[`prompt${roundNum}`][topic],
       });
-
       stage.currentGame.set("chatChannel-" + k, msgs);
     }
-
-    // Schedule future chatbot messages
-    promptInterval = setInterval(() => {
-      let nextPrompt = "";
-
-      for (const k of Object.keys(chatRooms)) {
-        // Send messages every couple of minutes unless either the participant or their partner requests an early finish
-        // If an early finish is requested, we break out of the schedule
-        if (discussionMinutesElapsed == gameParams["followupDelay1"]) {
-          nextPrompt = prompts["prompt2"][topic];
-          const msgs =
-            player.currentGame.get("chatChannel-" + roomCounter) || [];
-
-          player.currentGame.set("chatChannel-" + roomCounter, [
-            ...msgs,
-            {
-              sender: "-1",
-              dt: new Date().getTime(),
-              content: nextPrompt,
-            },
-          ]);
+    
+    // Lock participants in their current rooms
+    const remainingPlayers = stage.currentGame.players.filter((p) => p.get("ready"));
+    for (const player of remainingPlayers) {
+      player.set("roomLocked", true);
+      player.set("canSendMessages", true);
+    }
+  } else if (stageName.startsWith("group-discussion-transition-")) {
+    // Enable room changes and disable messaging
+    for (const player of stage.currentGame.players) {
+      player.set("roomLocked", false);
+      player.set("canSendMessages", false);
+      player.set("lastRoomChange", new Date().getTime());
+    }
+    
+    // Send transition message
+    for (const roomId in chatRooms) {
+      const msgs = stage.currentGame.get("chatChannel-" + roomId) || [];
+      stage.currentGame.set("chatChannel-" + roomId, [
+        ...msgs,
+        {
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: "You now have 1 minute to change rooms or create new ones. Messaging is disabled during this time."
         }
+      ]);
+    }
 
-        if (
-          discussionMinutesElapsed ==
-          gameParams["followupDelay1"] + gameParams["followupDelay2"]
-        ) {
-          nextPrompt = prompts["prompt3"][topic];
-          const msgs =
-            player.currentGame.get("chatChannel-" + roomCounter) || [];
-
-          player.currentGame.set("chatChannel-" + roomCounter, [
-            ...msgs,
-            {
-              sender: "-1",
-              dt: new Date().getTime(),
-              content: nextPrompt,
-            },
-          ]);
-        }
-
-        if (discussionMinutesElapsed == gameParams["switchRoomDelay"]) {
-          nextPrompt =
-            "(Reminder) You can check out other chat rooms at any time and switch to whichever you feel most comfortable in! If you switch, please introduce yourself and add on to the discussion.";
-          const msgs =
-            player.currentGame.get("chatChannel-" + roomCounter) || [];
-
-          player.currentGame.set("chatChannel-" + roomCounter, [
-            ...msgs,
-            {
-              sender: "-1",
-              dt: new Date().getTime(),
-              content: nextPrompt,
-            },
-          ]);
-        }
+    // ToDo: reduce the frequency and send to only inactive participants. Set up interval to check for inactive participants during this transition
+    let lastReminderTime = 0;
+    const transitionInterval = setInterval(() => {
+      if (!stage || !stage.currentGame) {
+        clearInterval(transitionInterval);
+        return;
       }
 
-      // Must run Empirica.flush() for asynchronous updates to be processed
-      Empirica.flush();
-      discussionMinutesElapsed++;
+      try {
+        const currentPlayers = stage.currentGame.players;
+        if (!currentPlayers) {
+          clearInterval(transitionInterval);
+          return;
+        }
 
-      if (discussionMinutesElapsed > gameParams.chatTime) {
-        clearInterval(promptInterval);
+        const currentTime = new Date().getTime();
+        // Only send reminder every 30 seconds
+        if (currentTime - lastReminderTime >= 30000) {
+          for (const player of currentPlayers) {
+            const lastChange = player.get("lastRoomChange") || 0;
+            const timeSinceLastChange = currentTime - lastChange;
+            
+            if (timeSinceLastChange > 30000) {
+              const viewingRoom = player.get("viewingRoom");
+              if (viewingRoom !== undefined) {
+                const msgs = stage.currentGame.get("chatChannel-" + viewingRoom) || [];
+                stage.currentGame.set("chatChannel-" + viewingRoom, [
+                  ...msgs,
+                  {
+                    sender: "-1",
+                    dt: currentTime,
+                    content: "Remember to explore other rooms during this transition period!"
+                  }
+                ]);
+              }
+            }
+          }
+          lastReminderTime = currentTime;
+        }
+      } catch (error) {
+        console.error("Error in transition interval:", error);
+        clearInterval(transitionInterval);
       }
-    }, 60 * 1000); // Once per minute
+    }, 5000); // Check every 5 seconds, but only send reminders every 30 seconds
+
+    // Store the interval ID in a way that won't cause circular references
+    stage.set("transitionIntervalId", transitionInterval[Symbol.toPrimitive]());
   }
-  Empirica.flush();
 });
 
+// Handle stage end
 Empirica.onStageEnded(({ stage }) => {
   const stageName = stage.get("name");
-  if (stageName == "group-discussion") {
-    clearInterval(promptInterval);
+  console.log("stage ended: " + stageName);
+  
+  if (stageName.startsWith("group-discussion-") && !stageName.includes("transition")) {
+    // Send round end message
+    for (const roomId in chatRooms) {
+      const msgs = stage.currentGame.get("chatChannel-" + roomId) || [];
+      stage.currentGame.set("chatChannel-" + roomId, [
+        ...msgs,
+        {
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: "This round has ended. You will now have 1 minute to change rooms."
+        }
+      ]);
+    }
+  } else if (stageName.startsWith("group-discussion-transition-")) {
+    // Clear the transition interval
+    const intervalId = stage.get("transitionIntervalId");
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
   }
 });
+
+// Check for inactive participants during transitions
+Empirica.on("player", "viewingRoom", (_, { player }) => {
+  const stage = player.currentStage;
+  if (stage && stage.get("name").startsWith("group-discussion-transition-")) {
+    player.set("lastRoomChange", new Date().getTime());
+  }
+});
+
+Empirica.onRoundStart(({ round }) => {});
 
 Empirica.onRoundEnded(({ round }) => {});
 

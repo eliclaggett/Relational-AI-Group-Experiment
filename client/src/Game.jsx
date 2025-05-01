@@ -18,7 +18,7 @@ export function Game() {
 
   if (stageName == "ready") {
     ui = <Ready />;
-  } else if (stageName == "group-discussion") {
+  } else if (stageName.startsWith("group-discussion-")) {
     ui = <Chat />;
   } else if (stageName == "summary-task") {
     ui = <Summary />;
