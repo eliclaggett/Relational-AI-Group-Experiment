@@ -418,7 +418,7 @@ Empirica.on(
         {
           sender: "-1",
           dt: new Date().getTime(),
-          content: "Welcome to the tutorial! Please type 'Hello!' to begin."
+          content: "Welcome! In the original game, I will provide a topic to discuss, but since we are practicing just type 'Hello' to begin!"
         }
       ]);
 
@@ -542,7 +542,7 @@ Empirica.on("player", "activeRoom", (_, { player, activeRoom }) => {
         {
           sender: "-1",
           dt: new Date().getTime(),
-          content: "Perfect! You've joined a new group. Now let's try creating your own group."
+          content: "Perfect! You've joined a new group. Now let's try creating your own group. In the original conversation, at the end of each round, you can create a new room if you do not like the conversations in any other room."
         }
       ]);
     }
@@ -605,24 +605,29 @@ Empirica.on("player", "sendMsg", (_, { player, sendMsg }) => {
         ...msgs,
         newMessage,
         {
+          sender: "-1",
+          dt: new Date().getTime() + 2000,
+          content: "Do you think AI increases security risk?"
+        },
+        {
           sender: "dummy1",
           dt: new Date().getTime() + 2000,
-          content: "Hi there! I'm excited to discuss with you."
+          content: "Yes, the new AI models can store my personal information in its memory and create a fake profile of me."
         },
         {
           sender: "dummy2",
           dt: new Date().getTime() + 3000,
-          content: "Hello everyone! Looking forward to our discussion."
+          content: "While I understand the concern, I think it is not AI's fault, rather the wrong people who wants to use it in a malicious way."
         },
         {
           sender: "dummy3",
           dt: new Date().getTime() + 4000,
-          content: "Hey! Let's have a great conversation."
+          content: "I agree, unless people use it for a bad way, it is just another software we use."
         },
         {
           sender: "-1",
           dt: new Date().getTime() + 5000,
-          content: "Great! Now let's try using the AI suggestion feature. Click on the green suggestion box to accept it."
+          content: "Great! Now let's try using the AI suggestion feature. Click on the green suggestion box to accept it. It is NOT mandatory to use it always, it acts as an additional feature to help you write faster."
         }
       ]);
     } else {
@@ -657,8 +662,8 @@ Empirica.on("player", "acceptSuggestion", (_, { player }) => {
       ...msgs,
       {
         sender: -1,
-        dt: new Date().getTime()+2000,
-        content: "Great! You've accepted the AI suggestion. Now let's try joining a different group. There are three groups available with different discussion topics."
+        dt: new Date().getTime()+10000,
+        content: "Great! You've accepted the AI suggestion. Now let's try joining a different group. There are three groups available with different discussion topics. In the original conversation, I will prompt you when you can change group."
       }
     ]);
     
@@ -690,7 +695,7 @@ Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
       {
         sender: "-1",
         dt: new Date().getTime(),
-        content: "Excellent! You've completed all the tutorial tasks. You may now proceed to the next step."
+        content: `Excellent! You've completed the practice chat round. In the original setup, this conversation will continue for ${gameParams.chatTime} minutes. For now, you may proceed to the next step.`
       }
     ]);
     Empirica.flush();
