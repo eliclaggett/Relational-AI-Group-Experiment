@@ -35,7 +35,7 @@ export default function Tutorial({ next }) {
   const gameParams = player.get("gameParams");
   const remainingErrors = player.get("remainingErrors") || 0;
   if (!gameParams) window.location.reload();
-  const correctAnswers = { 1: 1, 2: 1, 5: 1, 6: 1 };
+  const correctAnswers = { 1: 1, 2: 3, 5: 1, 6: 1 };
   const [step, setStep] = useState(1);
   const [nextButtonDisabled, setNextButtonDisabled] = useState(false);
   const [backButtonDisabled, setBackButtonDisabled] = useState(true);
@@ -54,7 +54,7 @@ export default function Tutorial({ next }) {
   const q2Answers = [
     [1, "To evaluate how productive groups form online"],
     [2, "To take a survey of my opinions"],
-    [3, "To discuss news topics with others"],
+    [3, "To chat with others and discuss news topics"],
   ];
   const q5Answers = [
     [1, formatMoney(gameParams.maxBonus)],
@@ -233,14 +233,14 @@ export default function Tutorial({ next }) {
     tutorialStepUI = (
       <Stack gap={3}>
         <Typography variant="h1" sx={{}}></Typography>
-        <img src="assets/overview.png" style={{ width: "80%", aspectRatio: "3", margin: "0 auto", display: "block" }} />
+        <img src="assets/overview.png" style={{ width: "40%", margin: "0 auto", display: "block" }} />
         <Typography variant="body1">
           This study has three parts. The entire
           study will take {gameParams.studyTime} minutes to complete. You will
           have an opportunity to earn extra money based on your performance.
         </Typography>
         <FormControl sx={{ pt: 4 }}>
-          <FormLabel>What is the purpose of this study?</FormLabel>
+          <FormLabel>What is your objective in this study?</FormLabel>
           <RadioGroup
             name="q2"
             onChange={handleRadioButtonChange}
@@ -286,7 +286,7 @@ export default function Tutorial({ next }) {
     const tasks = [
       {
         id: 1,
-        text: "Join the #tutorial-room and send a message that says: 'Hello!'",
+        text: "Send a message that says: 'Hello!' in #tutorial-room",
         completed: tutorialTask > 1
       },
       ...(gameParams.condition !== "control" ? [{
@@ -309,7 +309,7 @@ export default function Tutorial({ next }) {
     tutorialStepUI = (
       <Stack gap={3}>
         <Typography variant="h1">Step 2 Tutorial: Group Discussion</Typography>
-        <img src="assets/step_2.svg" style={{ height: "8em" }}/>
+        <img src="assets/step_2.png" style={{ width: "25%", margin: "0 auto", display: "block" }} />
         <Typography variant="body1">
           After all participants join in, you will be placed in a chat room with other participants and a
           chatbot moderator. Multiple rooms will be created by default and you
@@ -358,8 +358,7 @@ export default function Tutorial({ next }) {
               background: "orange",
             }}
           >
-            Messages in the chat room you're currently viewing (#tutorial-room)
-            are shown in the middle.
+            Messages in the chat room you're currently viewing are shown in the middle.
           </Container>
           <Container className="chatWindowRight">
             The members of the chat room you're currently viewing are listed on
@@ -426,12 +425,11 @@ export default function Tutorial({ next }) {
         </Typography>
         <img src="assets/tutorial_bonus.svg" style={{ height: "4em" }} />
         <Typography variant="body1">
-          To earn maximized bonus, please take care to thoroughly summarize the discussion of the last chat room
-          you join. We expect summaries to be about 100 &ndash;150 words in
-          length and to reiterate the viewpoints of all of the participants in
+          To earn maximized bonus, please take care to thoroughly summarize the discussion of the last round of
+          discussion. We expect summaries to reiterate the viewpoints of all of the participants in
           the room.
         </Typography>
-        <img src="assets/tutorial_tip-summary2.svg" style={{ height: "8em" }} />
+        <img src="assets/tutorial_tip-summary2.png" style={{ width: "55%", margin: "0 auto", display: "block" }} />
 
         <Typography variant="body1">
           {/* Note that joining a chat room with many members has the highest
