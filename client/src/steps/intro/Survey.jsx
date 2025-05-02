@@ -74,7 +74,7 @@ export default function Survey({ next }) {
         <ProgressList
           items={[
             {
-              name: "Initial Survey",
+              name: "Survey",
               time: "~" + gameParams.lobbyTime.toString() + " min",
             },
             {
