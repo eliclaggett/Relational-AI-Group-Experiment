@@ -188,6 +188,7 @@ export default function ChatRoom({}) {
       const sender = chatParticipants[msg.sender];
       if (!sender) return null; // Skip if sender not found
       
+
       return (
         <Message
           className="msg"
@@ -208,7 +209,7 @@ export default function ChatRoom({}) {
           <ChatAvatar
             alt={sender.name}
             src={
-              msg.sender == "-1"
+              msg.sender === "-1"
                 ? "/assets/ai0.svg"
                 : "/assets/animal_icons/" + sender.name + ".svg"
             }
@@ -330,7 +331,6 @@ export default function ChatRoom({}) {
   }
   function handleSendSuggestion() {
     const messageContent = stageName == "intro" ? "This is an AI-generated message!" : suggestion.content;
-    player.set("acceptSuggestion", true);
     game.set("chatChannel-" + activeRoom, [
       ...messages,
       {
@@ -339,7 +339,7 @@ export default function ChatRoom({}) {
         sender: participantIdx.toString(),
       },
     ]);
-
+    player.set("acceptSuggestion", true);
     setReceivedCompletion(false);
     player.set("sendMsg", {
       sender: participantIdx.toString(),
@@ -467,7 +467,7 @@ export default function ChatRoom({}) {
             <IconButton
               variant="plain"
               sx={{ minWidth: "2.5em", ml: "0.5em" }}
-              disabled={viewingRoom !== activeRoom}
+              disabled={viewingRoom !== activeRoom || !canSendMessages}
               onClick={handleSendSuggestion}
             >
               <SendRounded />
@@ -476,12 +476,13 @@ export default function ChatRoom({}) {
         </Container>
       ) : (
         stageName !== "intro" &&
-        gameParams.condition !== "control" &&
-        messages.some(msg => msg.sender === participantIdx.toString()) ? (
+        gameParams.condition !== "control" 
+        // && messages.some(msg => msg.sender === participantIdx.toString()) 
+        ? (
           <Container
             sx={{ p: "0em 1em 1em 1em !important", display: "flex" }}
           >
-            {suggestion.content && suggestion.content !== "" && (
+            {suggestion && suggestion.content && suggestion.content !== "" && (
               <div className="suggestion" onClick={handleCopySuggestion}>
                 {typeof suggestion.content === "object"
                   ? JSON.stringify(suggestion.content)
@@ -492,7 +493,7 @@ export default function ChatRoom({}) {
               <IconButton
                 variant="plain"
                 sx={{ minWidth: "2.5em", ml: "0.5em" }}
-                disabled={viewingRoom !== activeRoom}
+                disabled={viewingRoom !== activeRoom || !canSendMessages}
                 onClick={handleSendSuggestion}
               >
                 <SendRounded />
