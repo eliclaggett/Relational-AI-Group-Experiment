@@ -216,7 +216,7 @@ const gameParams = {
   maxWaitTime: 5,
   inactivityMax: 150, // seconds
   inactivityWarning: 120, // seconds
-  discussionPeriod: 0.3,
+  discussionPeriod: 0.6,
   transitionPeriod: 0.5,
   chatTime: 12,
   lobbyTime: 10,
@@ -288,6 +288,8 @@ Empirica.on("player", (ctx, { player, _ }) => {
     "animalOptions",
     animals.slice(playerCounter * 3, playerCounter * 3 + 3)
   );
+  // Set default animal identity to the first option
+  player.set("selfIdentity", animals[playerCounter * 3]);
   player.set("participantIdx", playerCounter);
   player.set("activeRoom", -1);
   player.set("joinedRooms", []);
@@ -296,7 +298,8 @@ Empirica.on("player", (ctx, { player, _ }) => {
   // Initialize base chat participants
   const baseParticipants = {
     "-1": { name: "Moderator Bot", room: -1, color: "#f4f4f4", active: new Date().getTime() },
-    [playerCounter]: { name: "hawk", room: 0, color: colors[playerCounter], active: new Date().getTime() }
+    // not sure what this line is doing
+    [playerCounter]: { name: animals[playerCounter * 3], room: 0, color: colors[playerCounter], active: new Date().getTime() }
   };
 
   // Set initial game state
@@ -569,7 +572,7 @@ Empirica.on("player", "activeRoom", (_, { player, activeRoom }) => {
   Empirica.flush();
 });
 
-Empirica.on("player", "sendMsg", (_, { player, sendMsg }) => {
+Empirica.on("player", "sendMsg", async (_, { player, sendMsg }) => {
   const participantIdx = sendMsg["sender"];
   const participantStep = player.get("step");
   const viewingRoom = player.get("viewingRoom");
@@ -642,8 +645,67 @@ Empirica.on("player", "sendMsg", (_, { player, sendMsg }) => {
       chatParticipants[participantIdx].active = sendMsg["dt"];
       player.currentGame.set("chatParticipants", chatParticipants);
     }
-    Empirica.flush();
+    // Check if there's only one participant in the room
+    const roomParticipants = Object.values(chatParticipants).filter(
+      p => p.room === viewingRoom && p.name !== "Moderator Bot"
+    );
+
+    if (roomParticipants.length === 1) {
+      // Get the topic and previous conversation
+      const topics = gameParams.topics;
+      const game_topic = topics[parseInt(player.currentGame.get("topic"))];
+      const previous_convo = player.currentGame.get("chatChannel-" + viewingRoom);
+      let chatLog = "";
+      for (const msg of previous_convo) {
+        chatLog += `${msg.sender}: ${msg.content}\n`;
+      }
+
+      // Generate AI response
+      const prompt = [
+        {
+          role: "system",
+          content: "You are a helpful moderator in a group discussion. Your role is to engage with the participant, ask relevant questions, and keep the conversation going. Be conversational but professional.",
+        },
+        {
+          role: "user",
+          content: `Topic of conversation: ${game_topic}
+          Previous Conversation (your id is -1): ${chatLog}
+
+          Generate a response as the moderator to continue the discussion. Keep it concise (1-2 sentences) and engaging.
+          Your response must follow the JSON format: 
+          {"Suggestion": "your response here"}`,
+        },
+      ];
+
+      try {
+        const completion = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: prompt,
+          store: false,
+        });
+
+        let reply = completion.choices[0].message["content"];
+        let parsed_reply = JSON.parse(reply);
+
+        // Add AI response to the chat
+        setTimeout(() => {
+          const updatedMsgs = player.currentGame.get("chatChannel-" + viewingRoom) || [];
+          player.currentGame.set("chatChannel-" + viewingRoom, [
+            ...updatedMsgs,
+            {
+              sender: "-1",
+              dt: new Date().getTime(),
+              content: parsed_reply.Suggestion
+            }
+          ]);
+          Empirica.flush();
+        }, 200); // 1 second delay to make it feel more natural
+      } catch (error) {
+        console.error("Error generating AI moderator response:", error);
+      }
+    }
   }
+  Empirica.flush();
 });
 
 Empirica.on("player", "acceptSuggestion", (_, { player }) => {
@@ -652,22 +714,23 @@ Empirica.on("player", "acceptSuggestion", (_, { player }) => {
   const viewingRoom = player.get("viewingRoom");
 
   if (participantStep === "tutorial" && tutorialTask === 2) {
-    // Add the accepted suggestion to the chat
-    const msgs = player.get("chatChannel-" + viewingRoom) || [];
     // Progress to next task
     player.set("tutorialTask", 3);
     
     // Add success message
-    player.set("chatChannel-" + viewingRoom, [
-      ...msgs,
-      {
-        sender: -1,
-        dt: new Date().getTime()+10000,
-        content: "Great! You've accepted the AI suggestion. Now let's try joining a different group. There are three groups available with different discussion topics. In the original conversation, I will prompt you when you can change group."
-      }
-    ]);
-    
-    Empirica.flush();
+    setTimeout(() => {
+      const msgs = player.get("chatChannel-" + viewingRoom) || [];
+
+      player.set("chatChannel-" + viewingRoom, [
+        ...msgs,
+        {
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: "Great! You've accepted the AI suggestion. Now let's try joining a different group. There are three groups available with different discussion topics. In the original conversation, I will prompt you when you can change group."
+        }
+      ]);
+      Empirica.flush();
+    }, 200);
   }
 });
 
@@ -951,7 +1014,7 @@ Empirica.on(
 
 Empirica.onGameStart(({ game }) => {
   const round = game.addRound({ name: "round" });
-  round.addStage({ name: "ready", duration: 30 }); // 30 seconds
+  round.addStage({ name: "ready", duration: 60 }); // 60 seconds
   
   // Add three conversation rounds with transitions only after first two
   for (let i = 1; i <= 3; i++) {
