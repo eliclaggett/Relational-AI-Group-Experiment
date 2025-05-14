@@ -419,29 +419,32 @@ export default function Tutorial({ next }) {
         <Typography variant="h1">Step 3 Tutorial: Summary Task</Typography>
         <img src="assets/step_3.svg" style={{ height: "8em" }}/>
         <Typography variant="body1">
-          After the timer elapses you will be asked to summarize the contents of
-          your discussion, including the contributions of all other members of
-          your room. Your bonus will be calculated as follows:
+        At the end of the final round, your chat task will conclude, and you will be asked to write a brief summary
+        of the discussion. This summary should reflect the contributions and perspectives of all members in your <b>final chatroom.</b>
         </Typography>
-        <img src="assets/tutorial_bonus.svg" style={{ height: "4em" }} />
+        {/* <img src="assets/tutorial_bonus.svg" style={{ height: "4em" }} /> */}
         <Typography variant="body1">
-          To earn maximized bonus, please take care to thoroughly summarize the discussion of the last round of
-          discussion. We expect summaries to reiterate the viewpoints of all of the participants in
-          the room.
+        To qualify, your report must be <b>100–150 words</b> and accurately capture the key viewpoints shared during the discussion,
+        including your own.
         </Typography>
         <img src="assets/tutorial_tip-summary2.png" style={{ width: "55%", margin: "0 auto", display: "block" }} />
 
         <Typography variant="body1">
-          {/* Note that joining a chat room with many members has the highest
-          potential bonus payment, but also carries risk if all members do not
-          perform equally well.  */}
-          If your bonus is calculated to be $0.00 or
-          lower, we will provide only the base pay for this study.
-          Regardless of the result of the calculation above,{" "}
+        Your bonus depends on both your own report quality and the report quality of your chatroom members. Specifically:
           <b>
-            the maximum bonus you can receive is{" "}
-            {formatMoney(gameParams.maxBonus)}.
+          Your bonus = $1 × (number of qualified reports from the room) − $0.50 × (number of members in the room)
           </b>
+        </Typography>
+        <Typography variant="body1">
+        If this results in a bonus of $0.00 or less, you will receive only the base pay for participating.
+        </Typography>
+        <Typography variant="body1">
+        To maximize your bonus:
+        <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: '1.2em' }}>
+          <li>Choose a room with members you trust to submit thoughtful, qualified reports.</li>
+          <li>A larger room gives you a chance to earn more, but it also comes with a higher risk of earning less.</li>
+          <li>You don’t need to agree with others. What matters is mutual effort and good-faith participation.</li>
+        </ul>
         </Typography>
         <FormControl sx={{}}>
           <FormLabel>
