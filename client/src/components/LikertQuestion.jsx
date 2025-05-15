@@ -1,6 +1,6 @@
 /*
  * Filename: LikertQuestion.jsx
- * Author: Elijah Claggett
+ * Author: Elijah Claggett, Faria Huq
  *
  * Description:
  * This ReactJS component is a 7-point likert-style radio button input element.

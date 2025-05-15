@@ -1,6 +1,6 @@
 /*
  * Filename: ChatRoom.jsx
- * Author: Elijah Claggett
+ * Author: Elijah Claggett, Faria Huq
  *
  * Description:
  * This ReactJS component wraps a Discord-like chat room.
@@ -96,9 +96,6 @@ export default function ChatRoom({}) {
   const stageName = stage?.get("name") || "intro";
   const gameParams = game.get("gameParams");
   const suggestion = player.get("suggestedReply");
-  /* || {
-    content: "AI Suggestion",
-  };*/
   const participantIdx = player.get("participantIdx");
   const participantStep = player.get("step") || "";
   const viewingRoom = player.get("viewingRoom") || 0;
@@ -116,6 +113,8 @@ export default function ChatRoom({}) {
   const [drafts, setDrafts] = useState({});
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [receivedCompletion, setReceivedCompletion] = useState(false);
+  const [showInactivityDialog, setShowInactivityDialog] = useState(false);
+  const [currentActivityDiff, setCurrentActivityDiff] = useState(0);
   const roomLocked = player.get("roomLocked") || false;
   const canSendMessages = player.get("canSendMessages") !== false;
   let self = {};
@@ -124,16 +123,6 @@ export default function ChatRoom({}) {
     if (idx == participantIdx) {
       self = chatParticipants[idx];
     }
-  }
-
-  const selfLastActiveDiff = (new Date().getTime() - self.active) / 1000;
-  if (
-    participantStep.includes("group-discussion") &&
-    selfLastActiveDiff > gameParams.inactivityMax
-  ) {
-    player.set("ended", true);
-    player.set("step", "end");
-    player.set("endReason", "timeout");
   }
 
   useEffect(() => {
@@ -167,6 +156,48 @@ export default function ChatRoom({}) {
       setReceivedCompletion(true);
     }
   }, [suggestion]);
+
+  useEffect(() => {
+    if (
+      !stageName.includes("group-discussion") ||
+      !gameParams ||
+      !self ||
+      typeof self.active === 'undefined'
+    ) {
+      setShowInactivityDialog(false);
+      setCurrentActivityDiff(0); // Reset activity diff
+      return; // Don't start the interval
+    }
+
+    // Initial calculation before interval starts for immediate UI update
+    const initialDiff = (new Date().getTime() - (self.active || new Date().getTime())) / 1000;
+    setCurrentActivityDiff(initialDiff);
+    if (initialDiff > gameParams.inactivityWarning && initialDiff <= gameParams.inactivityMax) {
+      setShowInactivityDialog(true);
+    }
+
+    const intervalId = setInterval(() => {
+      const newSelfLastActiveDiff = (new Date().getTime() - (self.active || new Date().getTime())) / 1000;
+      setCurrentActivityDiff(newSelfLastActiveDiff);
+
+      if (newSelfLastActiveDiff > gameParams.inactivityMax) {
+        player.set("ended", true);
+        player.set("step", "end");
+        player.set("endReason", "timeout");
+        setShowInactivityDialog(false);
+        clearInterval(intervalId); // Stop checking once timed out
+      } else if (newSelfLastActiveDiff > gameParams.inactivityWarning) {
+        setShowInactivityDialog(true);
+      } else {
+        setShowInactivityDialog(false);
+      }
+    }, 1000); // Check every second
+
+    return () => {
+      clearInterval(intervalId);
+      setCurrentActivityDiff(0); // Reset on cleanup
+    }
+  }, [stageName, gameParams, self, player]); // participantIdx is implicitly handled by `self` dependency if self reconstructs
 
   function handleMsgChange(ev) {
     let currentDrafts = drafts;
@@ -312,27 +343,16 @@ export default function ChatRoom({}) {
       const lastActiveDiff = (new Date().getTime() - user.active) / 1000;
       return (
         <ListItem key={"user-" + user.name}>
-          {/* <ListItemAvatar>
-            <Badge
-              overlap="circular"
-              anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-              variant="dot"
-              className={lastActiveDiff < 120 ? "active" : "idle"}
-            >
-              <Avatar
-                alt={user.name}
-                src={"/assets/animal_icons/" + user.name + ".svg"}
-                sx={{ bgcolor: user.color }}
-              />
-            </Badge>
-          </ListItemAvatar> */}
-
           <ListItemAvatar>
             <Badge
               overlap="circular"
               anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
               variant="dot"
-              className={lastActiveDiff < 120 ? "active" : "idle"}
+              className={
+                currentActivityDiff < gameParams.inactivityWarning
+                  ? "active"
+                  : "idle"
+              }
             >
               <Box
                 sx={{
@@ -355,7 +375,9 @@ export default function ChatRoom({}) {
             secondary={
               <Box>
                 <Typography variant="body2" color="text.secondary">
-                  {lastActiveDiff < 120 ? "Active" : "Idle"}
+                  {currentActivityDiff < gameParams.inactivityWarning
+                    ? "Active"
+                    : "Idle"}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Stance: {getStanceLabel(user.opinion)}
@@ -391,6 +413,7 @@ export default function ChatRoom({}) {
     setDrafts(currentDrafts);
     setReceivedCompletion(false);
     player.set("acceptSuggestion", true);
+    player.set("suggestedReply", { content: "" });
   }
   function handleSendSuggestion() {
     const messageContent = stageName == "intro" ? "This is an AI-generated message!" : suggestion.content;
@@ -409,6 +432,7 @@ export default function ChatRoom({}) {
       dt: new Date().getTime(),
       content: messageContent,
     });
+    player.set("suggestedReply", { content: "" });
 
     document.querySelector("textarea:not([readonly])").value = "";
     let currentDrafts = drafts;
@@ -418,6 +442,18 @@ export default function ChatRoom({}) {
 
   // Get the current room title safely
   const currentRoom = rooms[viewingRoom] || { title: "Loading..." };
+
+  const shouldShowTutorialSuggestion = stageName === "intro" &&
+    viewingRoom === activeRoom &&
+    player.get("joinedRooms")?.includes(viewingRoom) &&
+    gameParams.condition !== "control" &&
+    messages.some(msg => msg.sender === participantIdx.toString());
+
+  const shouldShowRegularSuggestion =
+    stageName !== "intro" &&
+    gameParams.condition !== "control" &&
+    suggestion && suggestion.content && suggestion.content !== "" &&
+    !stageName.includes('transition');
 
   return (
     <Stack
@@ -515,43 +551,22 @@ export default function ChatRoom({}) {
             </span>
           </Tooltip>
         </Container>
-        {(stageName === "intro" &&
-        viewingRoom === activeRoom &&
-        player.get("joinedRooms")?.includes(viewingRoom) &&
-        gameParams.condition !== "control" &&
-        messages.some(msg => msg.sender === participantIdx.toString())) ? (
+        {(shouldShowTutorialSuggestion || shouldShowRegularSuggestion) ? (
         <Container
           sx={{ p: "0em 1em 1em 1em !important", display: "flex" }}
         >
-          <div className="suggestion" onClick={handleCopySuggestion}>
-            This is an AI-generated message!
-          </div>
-          <span>
-            <IconButton
-              variant="plain"
-              sx={{ minWidth: "2.5em", ml: "0.5em" }}
-              disabled={viewingRoom !== activeRoom || !canSendMessages}
-              onClick={handleSendSuggestion}
-            >
-              <SendRounded />
-            </IconButton>
-          </span>
-        </Container>
-      ) : (
-        stageName !== "intro" &&
-        gameParams.condition !== "control" 
-        // && messages.some(msg => msg.sender === participantIdx.toString()) 
-        ? (
-          <Container
-            sx={{ p: "0em 1em 1em 1em !important", display: "flex" }}
-          >
-            {suggestion && suggestion.content && suggestion.content !== "" && (
-              <div className="suggestion" onClick={handleCopySuggestion}>
-                {typeof suggestion.content === "object"
-                  ? JSON.stringify(suggestion.content)
-                  : suggestion.content}
-              </div>
-            )}
+           {shouldShowTutorialSuggestion ? (
+            <div className="suggestion" onClick={handleCopySuggestion}>
+              This is an AI-generated message!
+            </div>
+          ) : shouldShowRegularSuggestion ? (
+            <div className="suggestion" onClick={handleCopySuggestion}>
+              {typeof suggestion.content === "object"
+                ? JSON.stringify(suggestion.content)
+                : suggestion.content}
+            </div>
+          ) : null}
+          {(shouldShowTutorialSuggestion || (shouldShowRegularSuggestion && suggestion && suggestion.content)) && (
             <span>
               <IconButton
                 variant="plain"
@@ -562,9 +577,9 @@ export default function ChatRoom({}) {
                 <SendRounded />
               </IconButton>
             </span>
-          </Container>
-        ) : null
-      )}
+          )}
+        </Container>
+      ) : null}
       </Container>
       {/* Active Users */}
       <Container
@@ -589,22 +604,30 @@ export default function ChatRoom({}) {
                 anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
                 variant="dot"
                 className={
-                  selfLastActiveDiff < gameParams.inactivityWarning
+                  currentActivityDiff < gameParams.inactivityWarning
                     ? "active"
                     : "idle"
                 }
               >
-                <Avatar
-                  alt={self.name}
-                  src={"/assets/animal_icons/" + self.name + ".svg"}
-                  sx={{ bgcolor: self.color }}
-                />
+                <Box
+                  sx={{
+                    border: `3px solid ${getRingColor(self.opinion)}`,
+                    borderRadius: "50%",
+                    p: "2px", // padding to make room for the border
+                  }}
+                >
+                  <Avatar
+                    alt={self.name}
+                    src={"/assets/animal_icons/" + self.name + ".svg"}
+                    sx={{ bgcolor: self.color }}
+                  />
+                </Box>
               </Badge>
             </ListItemAvatar>
             <ListItemText
               primary={self.name}
               secondary={
-                selfLastActiveDiff < gameParams.inactivityWarning
+                currentActivityDiff < gameParams.inactivityWarning
                   ? "Active"
                   : "Idle"
               }
@@ -639,10 +662,7 @@ export default function ChatRoom({}) {
         </DialogActions>
       </Dialog>
       <Dialog
-        open={
-          stageName.includes("group-discussion") &&
-          selfLastActiveDiff > gameParams.inactivityWarning
-        }
+        open={showInactivityDialog}
         onClose={handleCancelTimeout}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
@@ -652,7 +672,7 @@ export default function ChatRoom({}) {
           <DialogContentText id="alert-dialog-description">
             You will be kicked from this study without pay if you remain
             inactive for{" "}
-            {Math.floor(gameParams.inactivityMax - selfLastActiveDiff)} more
+            {Math.max(0, Math.floor(gameParams.inactivityMax - currentActivityDiff))} more
             seconds.
           </DialogContentText>
         </DialogContent>
