@@ -108,7 +108,7 @@ export default function Ready({}) {
         <ProgressList
           items={[
             {
-              name: "Initial Survey",
+              name: "Survey",
               time: "~" + gameParams.surveyTime.toString() + " min",
             },
             {
