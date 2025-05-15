@@ -47,7 +47,6 @@ import {
 import "./ChatRoom.css";
 import "./ChatRoomMessageList.scss";
 
-
 const getRingColor = (value) => {
   const colors = [
     "rgb(0, 128, 255)", // 1 - deep blue
@@ -61,7 +60,6 @@ const getRingColor = (value) => {
   
   return colors[Math.min(Math.max(value, 1), 7) - 1];
 };
-
 
 const getStanceLabel = (value) => {
   const stances = [
@@ -79,13 +77,8 @@ const getStanceLabel = (value) => {
 function minutesAgo(timestamp) {
   const now = new Date();
   const then = new Date(timestamp);
-
-  // Calculate the difference in milliseconds
   const diff = now.getTime() - then.getTime();
-
-  // Convert to minutes
   const minutes = Math.floor(diff / (1000 * 60));
-
   return minutes;
 }
 
@@ -113,8 +106,10 @@ export default function ChatRoom({}) {
   const [drafts, setDrafts] = useState({});
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [receivedCompletion, setReceivedCompletion] = useState(false);
-  const [showInactivityDialog, setShowInactivityDialog] = useState(false);
   const [currentActivityDiff, setCurrentActivityDiff] = useState(0);
+  const [lastLocalActive, setLastLocalActive] = useState(Date.now());
+  const localInactivityDiff = (Date.now() - lastLocalActive) / 1000;
+
   const roomLocked = player.get("roomLocked") || false;
   const canSendMessages = player.get("canSendMessages") !== false;
   let self = {};
@@ -123,6 +118,23 @@ export default function ChatRoom({}) {
     if (idx == participantIdx) {
       self = chatParticipants[idx];
     }
+  }
+
+  const selfLastActive = player.get("active");
+  const selfLastActiveDiff =
+    typeof selfLastActive === "number"
+      ? (Date.now() - selfLastActive) / 1000
+      : 0;
+
+  if (
+    participantStep.includes("group-discussion") &&
+    !participantStep.includes("transition") &&
+    typeof selfLastActive === "number" &&
+    selfLastActiveDiff > gameParams.inactivityMax
+  ) {
+    player.set("ended", true);
+    player.set("step", "end");
+    player.set("endReason", "timeout");
   }
 
   useEffect(() => {
@@ -140,70 +152,71 @@ export default function ChatRoom({}) {
 
   useEffect(() => {
     setReceivedCompletion(false);
-    // Request AI assistance for every new message
     if (messages &&
       stageName.includes("group-discussion") &&
+      !participantStep.includes("transition") &&
+      messages.length > 0 && // Ensure messages array is not empty
       messages[messages.length - 1].sender != participantIdx
     ) {
       console.log("requesting assistance");
       player.set("requestAIAssistance", { id: player.get("gtID") + 1 });
     }
-  }, [messages]);
+  }, [messages, stageName, participantIdx, player]); 
 
   useEffect(() => {
     if (suggestion && suggestion.id > player.get("lastRequestID")) {
       player.set("lastRequestID", suggestion.id);
       setReceivedCompletion(true);
     }
-  }, [suggestion]);
+  }, [suggestion, player]); 
 
+  useEffect(() => {
+    const updateLocalActive = () => {
+      const now = Date.now();
+      setLastLocalActive(now);
+      player.set("active", now);
+    };
+  
+    window.addEventListener("mousemove", updateLocalActive);
+    window.addEventListener("keydown", updateLocalActive);
+  
+    return () => {
+      window.removeEventListener("mousemove", updateLocalActive);
+      window.removeEventListener("keydown", updateLocalActive);
+    };
+  }, []);
+  
   useEffect(() => {
     if (
       !stageName.includes("group-discussion") ||
-      !gameParams ||
-      !self ||
-      typeof self.active === 'undefined'
-    ) {
-      setShowInactivityDialog(false);
-      setCurrentActivityDiff(0); // Reset activity diff
-      return; // Don't start the interval
-    }
-
-    // Initial calculation before interval starts for immediate UI update
-    const initialDiff = (new Date().getTime() - (self.active || new Date().getTime())) / 1000;
-    setCurrentActivityDiff(initialDiff);
-    if (initialDiff > gameParams.inactivityWarning && initialDiff <= gameParams.inactivityMax) {
-      setShowInactivityDialog(true);
-    }
-
-    const intervalId = setInterval(() => {
-      const newSelfLastActiveDiff = (new Date().getTime() - (self.active || new Date().getTime())) / 1000;
-      setCurrentActivityDiff(newSelfLastActiveDiff);
-
-      if (newSelfLastActiveDiff > gameParams.inactivityMax) {
+      stageName.includes("transition")
+    ) return;
+  
+    const interval = setInterval(() => {
+      const last = player.get("active");
+      const diff = typeof last === "number" ? (Date.now() - last) / 1000 : 0;
+      setCurrentActivityDiff(diff);
+  
+      if (diff > gameParams.inactivityMax) {
         player.set("ended", true);
         player.set("step", "end");
         player.set("endReason", "timeout");
-        setShowInactivityDialog(false);
-        clearInterval(intervalId); // Stop checking once timed out
-      } else if (newSelfLastActiveDiff > gameParams.inactivityWarning) {
-        setShowInactivityDialog(true);
+      } else if (diff > gameParams.inactivityWarning) {
+        player.set("showTimeoutWarning", true);
       } else {
-        setShowInactivityDialog(false);
+        player.set("showTimeoutWarning", false);
       }
-    }, 1000); // Check every second
-
-    return () => {
-      clearInterval(intervalId);
-      setCurrentActivityDiff(0); // Reset on cleanup
-    }
-  }, [stageName, gameParams, self, player]); // participantIdx is implicitly handled by `self` dependency if self reconstructs
+    }, 3000);
+  
+    return () => clearInterval(interval);
+  }, [stageName, gameParams, player]);  
 
   function handleMsgChange(ev) {
     let currentDrafts = drafts;
     currentDrafts[viewingRoom] = ev.target.value;
     setDrafts(currentDrafts);
   }
+
   function handleKeyDown(ev) {
     if (ev.keyCode == 13 && !ev.shiftKey) {
       ev.preventDefault();
@@ -214,6 +227,7 @@ export default function ChatRoom({}) {
       }
     }
   }
+
   function handleSend() {
     if (!canSendMessages) {
       setTooltipOpen(true);
@@ -247,9 +261,7 @@ export default function ChatRoom({}) {
     return msgs.map((msg) => {
       msgIdx += 1;
       const sender = chatParticipants[msg.sender];
-      if (!sender) return null; // Skip if sender not found
-      
-
+      if (!sender) return null;
       return (
         <Message
           className="msg"
@@ -284,9 +296,13 @@ export default function ChatRoom({}) {
   function viewRoom(room) {
     player.set("viewingRoom", room);
   }
+
   function joinRoom() {
     player.set("activeRoom", viewingRoom);
-    player.set("joinedRooms", [...player.get("joinedRooms"), viewingRoom]);
+    const currentJoinedRooms = player.get("joinedRooms") || [];
+    if (!currentJoinedRooms.includes(viewingRoom)) {
+        player.set("joinedRooms", [...currentJoinedRooms, viewingRoom]);
+    }
   }
 
   function generateRoomListItems(rooms) {
@@ -315,7 +331,6 @@ export default function ChatRoom({}) {
     const roomParticipants = [];
     for (const idx in chatParticipants) {
       if (participantStep === "tutorial") {
-        // During tutorial, show all participants in the current room
         if (chatParticipants[idx].room == viewingRoom) {
           roomParticipants.push(chatParticipants[idx]);
         }
@@ -358,7 +373,7 @@ export default function ChatRoom({}) {
                 sx={{
                   border: `3px solid ${getRingColor(user.opinion)}`,
                   borderRadius: "50%",
-                  p: "2px", // padding to make room for the border
+                  p: "2px",
                 }}
               >
                 <Avatar
@@ -369,7 +384,6 @@ export default function ChatRoom({}) {
               </Box>
             </Badge>
           </ListItemAvatar>
-
           <ListItemText
             primary={user.name === self.name ? user.name + " (You)" : user.name}
             secondary={
@@ -391,20 +405,26 @@ export default function ChatRoom({}) {
   }
 
   function showNewRoomModal() {
-      setNewRoomOpen(true);
+    setNewRoomOpen(true);
   }
 
   function handleClose() {
     setNewRoomOpen(false);
   }
+
   function handleCancelTimeout() {
-    player.set("resetInactivity", new Date().getTime());
-    // setTimeoutAlert(false);
-  }
+    const now = Date.now();
+    player.set("resetInactivity", true);
+    player.set("active", now); // <-- This is the key part
+    setLastLocalActive(now); // Update local state as well
+    setCurrentActivityDiff(0);
+  }  
+
   function handleCreateRoom() {
     player.set("createRoom", new Date());
     setNewRoomOpen(false);
   }
+
   function handleCopySuggestion() {
     const messageContent = stageName == "intro" ? "This is an AI-generated message!" : suggestion.content;
     document.querySelector("textarea:not([readonly])").value = messageContent;
@@ -415,6 +435,7 @@ export default function ChatRoom({}) {
     player.set("acceptSuggestion", true);
     player.set("suggestedReply", { content: "" });
   }
+
   function handleSendSuggestion() {
     const messageContent = stageName == "intro" ? "This is an AI-generated message!" : suggestion.content;
     game.set("chatChannel-" + activeRoom, [
@@ -440,7 +461,6 @@ export default function ChatRoom({}) {
     setDrafts(currentDrafts);
   }
 
-  // Get the current room title safely
   const currentRoom = rooms[viewingRoom] || { title: "Loading..." };
 
   const shouldShowTutorialSuggestion = stageName === "intro" &&
@@ -609,18 +629,18 @@ export default function ChatRoom({}) {
                     : "idle"
                 }
               >
-                <Box
+                 <Box
                   sx={{
                     border: `3px solid ${getRingColor(self.opinion)}`,
                     borderRadius: "50%",
-                    p: "2px", // padding to make room for the border
+                    p: "2px",
                   }}
                 >
-                  <Avatar
-                    alt={self.name}
-                    src={"/assets/animal_icons/" + self.name + ".svg"}
-                    sx={{ bgcolor: self.color }}
-                  />
+                <Avatar
+                  alt={self.name}
+                  src={"/assets/animal_icons/" + self.name + ".svg"}
+                  sx={{ bgcolor: self.color }}
+                />
                 </Box>
               </Badge>
             </ListItemAvatar>
@@ -662,7 +682,11 @@ export default function ChatRoom({}) {
         </DialogActions>
       </Dialog>
       <Dialog
-        open={showInactivityDialog}
+        open={
+          stageName.includes("group-discussion") &&
+          !stageName.includes("transition") &&
+          localInactivityDiff > gameParams.inactivityWarning
+        }        
         onClose={handleCancelTimeout}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
@@ -672,7 +696,7 @@ export default function ChatRoom({}) {
           <DialogContentText id="alert-dialog-description">
             You will be kicked from this study without pay if you remain
             inactive for{" "}
-            {Math.max(0, Math.floor(gameParams.inactivityMax - currentActivityDiff))} more
+            {Math.max(0, Math.floor(gameParams.inactivityMax - selfLastActiveDiff))} more
             seconds.
           </DialogContentText>
         </DialogContent>
