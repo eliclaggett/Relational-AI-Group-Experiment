@@ -35,7 +35,7 @@ export default function Tutorial({ next }) {
   const gameParams = player.get("gameParams");
   const remainingErrors = player.get("remainingErrors") || 0;
   if (!gameParams) window.location.reload();
-  const correctAnswers = { 1: 1, 2: 3, 5: 1, 6: 1 };
+  const correctAnswers = { 1: 1, 2: 3, 4: 1 }; //5: 1,
   const [step, setStep] = useState(1);
   const [nextButtonDisabled, setNextButtonDisabled] = useState(false);
   const [backButtonDisabled, setBackButtonDisabled] = useState(true);
@@ -54,28 +54,25 @@ export default function Tutorial({ next }) {
   const q2Answers = [
     [1, "To evaluate how productive groups form online"],
     [2, "To take a survey of my opinions"],
-    [3, "To chat with others and discuss news topics"],
+    [3, "To chat with others and develop mutual understanding"],
   ];
-  const q5Answers = [
-    [1, formatMoney(gameParams.maxBonus)],
-    [2, formatMoney(gameParams.bonusPerParticipant)],
-    [3, "$0.00"],
+  const q4Answers = [
+    [1, "True"],
+    [2, "False"],
   ];
-
-  const q6Answers = [
-    [1, "The last room you join"],
-    [2, "The first room you join"],
-    [3, "The room you spend the most time in"],
-  ];
+  // const q5Answers = [
+  //   [1, formatMoney(gameParams.maxBonus)],
+  //   [2, formatMoney(gameParams.bonusPerParticipant)],
+  //   [3, "$0.00"],
+  // ];
 
   const [q2RadioButtons, setQ2RadioButtons] = useState([]);
-  const [q5RadioButtons, setQ5RadioButtons] = useState([]);
-  const [q6RadioButtons, setQ6RadioButtons] = useState([]);
+  const [q4RadioButtons, setQ4RadioButtons] = useState([]);
 
   useEffect(() => {
     const tmpQ2RadioButtons = [];
+    const tmpQ4RadioButtons = [];
     const tmpQ5RadioButtons = [];
-    const tmpQ6RadioButtons = [];
 
     shuffleArray(q2Answers);
     for (const q of q2Answers) {
@@ -89,9 +86,9 @@ export default function Tutorial({ next }) {
       );
     }
 
-    shuffleArray(q5Answers);
-    for (const q of q5Answers) {
-      tmpQ5RadioButtons.push(
+    shuffleArray(q4Answers);
+    for (const q of q4Answers) {
+      tmpQ4RadioButtons.push(
         <FormControlLabel
           value={q[0]}
           control={<Radio />}
@@ -101,21 +98,21 @@ export default function Tutorial({ next }) {
       );
     }
 
-    shuffleArray(q6Answers);
-    for (const q of q6Answers) {
-      tmpQ6RadioButtons.push(
-        <FormControlLabel
-          value={q[0]}
-          control={<Radio />}
-          label={q[1]}
-          key={"q2-" + q[0]}
-        />
-      );
-    }
+    // shuffleArray(q5Answers);
+    // for (const q of q5Answers) {
+    //   tmpQ5RadioButtons.push(
+    //     <FormControlLabel
+    //       value={q[0]}
+    //       control={<Radio />}
+    //       label={q[1]}
+    //       key={"q2-" + q[0]}
+    //     />
+    //   );
+    // }
 
     setQ2RadioButtons(tmpQ2RadioButtons);
-    setQ5RadioButtons(tmpQ5RadioButtons);
-    setQ6RadioButtons(tmpQ6RadioButtons);
+    setQ4RadioButtons(tmpQ4RadioButtons);
+    // setQ5RadioButtons(tmpQ5RadioButtons);
 
     window.scrollTo(0, 0);
   }, []);
@@ -124,8 +121,8 @@ export default function Tutorial({ next }) {
   const [radioButtonVals, setRadioButtonVals] = useState({
     q1: "1",
     q2: "",
+    q4: "",
     q5: "",
-    q6: "",
   });
 
   const handleRadioButtonChange = (evt) => {
@@ -149,9 +146,9 @@ export default function Tutorial({ next }) {
 
   useEffect(() => {
     document.querySelector("h1").scrollIntoView();
-    if (step == 4 && !passedTutorialMessage) {
+    if (step == 5 && !passedTutorialMessage) {
       setNextButtonDisabled(true);
-    } else if (step == 4 && passedTutorialMessage) {
+    } else if (step == 5 && passedTutorialMessage) {
       setNextButtonDisabled(false);
     }
     if (step == 3) {
@@ -167,10 +164,10 @@ export default function Tutorial({ next }) {
     setErrorDisplay("none");
 
     if (
-      !(step == 1 || step == 2 || step == 5) ||
+      !(step == 1 || step == 2 || step == 4) ||
       radioButtonVals["q" + step] == correctAnswers[step]
     ) {
-      if (step == 7) {
+      if (step == 8) {
         // Mark that the tutorial was finished
         player.set("passedTutorial", true);
         next();
@@ -180,7 +177,7 @@ export default function Tutorial({ next }) {
       }
     } else {
       setErrorDisplay("");
-      if (step == 4) {
+      if (step == 5) {
         Q6("none");
       }
       // setNextButtonDisabled(true);
@@ -254,8 +251,9 @@ export default function Tutorial({ next }) {
   } else if (step == 3) {
     tutorialStepUI = (
       <Stack gap={3}>
-        <Typography variant="h1">Step 1 Tutorial: Survey</Typography>
-        <img src="assets/step_1.svg" style={{ height: "8em" }}/>
+        <Typography variant="h1">Tutorial</Typography>
+        <Typography variant="h1">Step 1: Survey</Typography>
+        <img src="assets/step_1.svg" style={{ height: "12em" }}/>
         <Typography variant="body1">
           First, you will complete a brief survey of your opinions.
         </Typography>
@@ -265,7 +263,7 @@ export default function Tutorial({ next }) {
           in the group chat. */}
 
         <Typography variant="h3">
-          Now, let's practice! Here is an example question:
+          Now, let's practice! Here is an example question: Do you like ice cream?
         </Typography>
         <LikertQuestion
           value={exampleSurveyVal}
@@ -282,6 +280,32 @@ export default function Tutorial({ next }) {
       </Stack>
     );
   } else if (step == 4) {
+    tutorialStepUI = (
+      <Stack gap={3}>
+        <Typography variant="h1">Tutorial</Typography>
+        <Typography variant="h1">Step 2: Group Discussion</Typography>
+        <img src="assets/step_2.png" style={{ width: "50%", margin: "0 auto", display: "block" }} />
+        <Typography variant="body1">
+          After all participants join in, you will be placed in a chat room with other participants and a
+          chatbot moderator. There will be three rounds of conversation. In between two round, you will be given a transition window to view other rooms.
+          Remember that you must view other rooms, but it is not mandatory to change room if you do not wish to.
+           
+          <br />
+        </Typography>
+        <FormControl sx={{ pt: 4 }}>
+          <FormLabel>Is the statement True or False: 'You must check other rooms, but it is not mandatory to join a different group if I do not wish to.'</FormLabel>
+          <RadioGroup
+            name="q4"
+            onChange={handleRadioButtonChange}
+            value={radioButtonVals["q4"]}
+          >
+            {q4RadioButtons}
+          </RadioGroup>
+        </FormControl>
+      </Stack>
+    );
+  }
+  else if (step == 5) {
     const tutorialTask = player.get("tutorialTask") || 1;
     const tasks = [
       {
@@ -308,15 +332,35 @@ export default function Tutorial({ next }) {
 
     tutorialStepUI = (
       <Stack gap={3}>
-        <Typography variant="h1">Step 2 Tutorial: Group Discussion</Typography>
-        <img src="assets/step_2.png" style={{ width: "25%", margin: "0 auto", display: "block" }} />
+        <Typography variant="h1">Tutorial</Typography>
+        <Typography variant="h1">Step 2: Group Discussion</Typography>
+        <img src="assets/step_2.svg" style={{ height: "12em" }}/>
         <Typography variant="body1">
-          After all participants join in, you will be placed in a chat room with other participants and a
-          chatbot moderator. Multiple rooms will be created by default and you
-          can move about them freely.
+          Now, let's have a small practice session! Complete each of the following tasks to proceed.
           <br />
         </Typography>
-        <Container
+        <Stack gap={2}>
+          {tasks.map((task) => (
+            <Typography
+              key={task.id}
+              variant="body1"
+              sx={{
+                color: task.completed ? "success.main" : task.id === tutorialTask ? "primary.main" : "text.secondary",
+                fontWeight: task.id === tutorialTask ? "bold" : "normal"
+              }}
+            >
+              {task.id}. {task.text}
+            </Typography>
+          ))}
+        </Stack>
+        <Alert
+          variant="standard"
+          severity="success"
+          sx={{ display: passedTutorialMessage ? "flex" : "none" }}
+        >
+          Great job! You've completed all the tutorial tasks. You may now proceed to the next step.
+        </Alert>
+        {/* <Container
           className="chatWindow-sm"
           sx={{
             transform: {
@@ -364,7 +408,7 @@ export default function Tutorial({ next }) {
             The members of the chat room you're currently viewing are listed on
             the right panel.
           </Container>
-        </Container>
+        </Container> */}
         <Container
           id="chatWindow-sm"
           sx={{
@@ -390,44 +434,23 @@ export default function Tutorial({ next }) {
         >
         <ChatRoom/>
         </Container>
-        <Stack gap={2}>
-          {tasks.map((task) => (
-            <Typography
-              key={task.id}
-              variant="body1"
-              sx={{
-                color: task.completed ? "success.main" : task.id === tutorialTask ? "primary.main" : "text.secondary",
-                fontWeight: task.id === tutorialTask ? "bold" : "normal"
-              }}
-            >
-              {task.id}. {task.text}
-            </Typography>
-          ))}
-        </Stack>
-        <Alert
-          variant="standard"
-          severity="success"
-          sx={{ display: passedTutorialMessage ? "flex" : "none" }}
-        >
-          Great job! You've completed all the tutorial tasks. You may now proceed to the next step.
-        </Alert>
       </Stack>
     );
-  } else if (step == 5) {
+  } else if (step == 6) {
     tutorialStepUI = (
       <Stack gap={3}>
-        <Typography variant="h1">Step 3 Tutorial: Summary Task</Typography>
-        <img src="assets/step_3.svg" style={{ height: "8em" }}/>
+        <Typography variant="h1">Tutorial</Typography>
+        <Typography variant="h1">Step 3: Summary Task</Typography>
+        <img src="assets/step_3.svg" style={{ height: "12em" }}/>
         <Typography variant="body1">
         At the end of the final round, your chat task will conclude, and you will be asked to write a brief summary
         of the discussion. This summary should reflect the contributions and perspectives of all members in your <b>final chatroom.</b>
         </Typography>
-        {/* <img src="assets/tutorial_bonus.svg" style={{ height: "4em" }} /> */}
         <Typography variant="body1">
         To qualify, your report must be <b>100–150 words</b> and accurately capture the key viewpoints shared during the discussion,
         including your own.
         </Typography>
-        <img src="assets/tutorial_tip-summary2.png" style={{ width: "55%", margin: "0 auto", display: "block" }} />
+        <img src="assets/tutorial_tip-summary2.png" style={{ width: "65%", margin: "0 auto", display: "block" }} />
 
         <Typography variant="body1">
         Your bonus depends on both your own report quality and the report quality of your chatroom members. Specifically:
@@ -446,7 +469,7 @@ export default function Tutorial({ next }) {
           <li>You don’t need to agree with others. What matters is mutual effort and good-faith participation.</li>
         </ul>
         </Typography>
-        <FormControl sx={{}}>
+        {/* <FormControl sx={{}}>
           <FormLabel>
             How high could your bonus reach if you are in a chat room with five
             members (including yourself)?
@@ -458,10 +481,10 @@ export default function Tutorial({ next }) {
           >
             {q5RadioButtons}
           </RadioGroup>
-        </FormControl>
+        </FormControl> */}
       </Stack>
     );
-  } else if (step == 6) {
+  } else if (step == 7) {
     tutorialStepUI = (
       <Stack gap={3} alignItems={"baseline"} id="tutorialTips">
         <Typography variant="h1">Tips for Success</Typography>
@@ -523,7 +546,7 @@ export default function Tutorial({ next }) {
         </Paper>
       </Stack>
     );
-  } else if (step == 7) {
+  } else if (step == 8) {
     tutorialStepUI = (
       <Stack gap={3} alignItems={"center"}>
         <Typography variant="h1">Congratulations!</Typography>
