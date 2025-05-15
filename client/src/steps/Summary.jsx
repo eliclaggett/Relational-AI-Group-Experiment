@@ -37,6 +37,8 @@ export default function Summary({}) {
   const chatParticipants = game.get("chatParticipants"); // TODO: Change to game parameter
   const summary = player.get("summary");
   const [summaryText, setSummaryText] = useState("");
+  const [regroupReason, setRegroupReason] = useState("");
+  const [aiFeedback, setAiFeedback] = useState("");
 
   let self = {};
   const [userAgreeVal, setUserAgreeVal] = useState({});
@@ -114,6 +116,10 @@ export default function Summary({}) {
 
   function handleSubmitSummary() {
     player.set("summaryText", summaryText);
+    player.set("regroupReason", regroupReason);
+    if (gameParams.condition !== "control") {
+      player.set("aiFeedback", aiFeedback);
+    }
     player.set("summaryAgreement", userAgreeVal);
     player.set("summary", true);
   }
@@ -143,6 +149,24 @@ export default function Summary({}) {
       </FormGroup>
 
       <FormGroup>
+        <FormControlLabel
+          control={<></>}
+          label={
+            "Why did you decide to regroup/not to regroup?"
+          }
+        />
+        <TextField
+          multiline
+          value={regroupReason}
+          onChange={(ev) => {
+            setRegroupReason(ev.target.value);
+          }}
+          rows={4}
+          placeholder="Type answer here."
+        />
+      </FormGroup>
+
+      <FormGroup>
         <Typography variant="body1" sx={{ my: 2 }}>
           For each member of the chat room you ended in, rate your level of
           agreement or disagreement with their opinions during the discussion.
@@ -151,6 +175,27 @@ export default function Summary({}) {
         </Typography>
         {generateUserListItems()}
       </FormGroup>
+
+      {gameParams.condition !== "control" && (
+        <FormGroup>
+          <FormControlLabel
+            control={<></>}
+            label={
+              "How did you feel about AI suggestions?"
+            }
+          />
+          <TextField
+            multiline
+            value={aiFeedback}
+            onChange={(ev) => {
+              setAiFeedback(ev.target.value);
+            }}
+            rows={4}
+            placeholder="Type answer here."
+          />
+        </FormGroup>
+      )}
+
       <div>
         <Button
           onClick={handleSubmitSummary}
@@ -194,8 +239,8 @@ export default function Summary({}) {
         <ProgressList
           items={[
             {
-              name: "Initial Survey",
-              time: "~" + gameParams.lobbyTime.toString() + " min",
+              name: "Survey",
+              time: "~" + gameParams.surveyTime.toString() + " min",
             },
             {
               name: "Group Discussion",
