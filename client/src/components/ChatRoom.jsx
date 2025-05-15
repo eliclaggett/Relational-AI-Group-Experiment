@@ -14,6 +14,7 @@ import {
   useStage,
 } from "@empirica/core/player/classic/react";
 import {
+  Box,
   Avatar,
   Badge,
   Button,
@@ -45,6 +46,35 @@ import {
 } from "@chatscope/chat-ui-kit-react";
 import "./ChatRoom.css";
 import "./ChatRoomMessageList.scss";
+
+
+const getRingColor = (value) => {
+  const colors = [
+    "rgb(0, 128, 255)", // 1 - deep blue
+    "rgb(74, 160, 246)", // 2 - faded blue
+    "rgb(163, 209, 255)", // 3 - closer to gray
+    "rgb(221, 221, 221)", // 4 - neutral gray
+    "rgb(244, 196, 154)",   // 5 - closer to gray
+    "rgb(250, 155, 73)",   // 6 - faded orange
+    "rgb(245, 114, 0)",   // 7 - deep orange
+  ];
+  
+  return colors[Math.min(Math.max(value, 1), 7) - 1];
+};
+
+
+const getStanceLabel = (value) => {
+  const stances = [
+    "Disagree",
+    "Disagree",
+    "Disagree",
+    "Neutral",
+    "Agree",
+    "Agree",
+    "Agree"
+  ];
+  return stances[Math.min(Math.max(value, 1), 7) - 1];
+};
 
 function minutesAgo(timestamp) {
   const now = new Date();
@@ -282,7 +312,7 @@ export default function ChatRoom({}) {
       const lastActiveDiff = (new Date().getTime() - user.active) / 1000;
       return (
         <ListItem key={"user-" + user.name}>
-          <ListItemAvatar>
+          {/* <ListItemAvatar>
             <Badge
               overlap="circular"
               anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
@@ -295,10 +325,43 @@ export default function ChatRoom({}) {
                 sx={{ bgcolor: user.color }}
               />
             </Badge>
+          </ListItemAvatar> */}
+
+          <ListItemAvatar>
+            <Badge
+              overlap="circular"
+              anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+              variant="dot"
+              className={lastActiveDiff < 120 ? "active" : "idle"}
+            >
+              <Box
+                sx={{
+                  border: `3px solid ${getRingColor(user.opinion)}`,
+                  borderRadius: "50%",
+                  p: "2px", // padding to make room for the border
+                }}
+              >
+                <Avatar
+                  alt={user.name}
+                  src={`/assets/animal_icons/${user.name}.svg`}
+                  sx={{ bgcolor: user.color }}
+                />
+              </Box>
+            </Badge>
           </ListItemAvatar>
+
           <ListItemText
-            primary={user.name == self.name ? user.name + " (You)" : user.name}
-            secondary={lastActiveDiff < 120 ? "Active" : "Idle"}
+            primary={user.name === self.name ? user.name + " (You)" : user.name}
+            secondary={
+              <Box>
+                <Typography variant="body2" color="text.secondary">
+                  {lastActiveDiff < 120 ? "Active" : "Idle"}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Stance: {getStanceLabel(user.opinion)}
+                </Typography>
+              </Box>
+            }
           />
         </ListItem>
       );
