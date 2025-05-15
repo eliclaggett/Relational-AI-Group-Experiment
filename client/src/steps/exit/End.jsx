@@ -1,6 +1,6 @@
 /*
  * Filename: End.jsx
- * Author: Elijah Claggett
+ * Author: Elijah Claggett, Faria Huq
  *
  * Description:
  * This ReactJS component wraps the "End" step of the experiment.
@@ -36,11 +36,9 @@ export default function End({}) {
   const player = usePlayer();
   const game = useGame();
   const participantIdx = player.get("participantIdx") || 0;
-  const viewingRoom = player.get("viewingRoom") || 0; // TODO: Remove else
   const activeRoom = player.get("activeRoom") || 0; // TODO: Remove else
   const rooms = game.get("chatRooms"); // TODO: Change to game parameter
   const chatParticipants = game.get("chatParticipants"); // TODO: Change to game parameter
-  const stageTimer = useStageTimer();
   const summary = player.get("summary");
   const gameParams = game.get("gameParams");
   const endReason = player.get("endReason") || "none";
@@ -49,10 +47,8 @@ export default function End({}) {
 
   const roomBonus = [];
 
-  let self = {};
-  let totalPay = gameParams.basePay;
+  let totalPay = gameParams.basePay + gameParams.discussionPay;
   let bonusPay = 0;
-  const [userAgreeVal, setUserAgreeVal] = useState("");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -60,8 +56,9 @@ export default function End({}) {
 
   for (const idx in chatParticipants) {
     const p = chatParticipants[idx];
-    if (p.room == activeRoom) {
-      if (idx != participantIdx) {
+    if (p.room === activeRoom) {
+      if (parseInt(idx) !== parseInt(participantIdx)) {
+        console.log('idx', idx, 'participantIdx', participantIdx);
         roomBonus.push(
           <tr key={p["name"]}>
             <td>{p["name"]}</td>
@@ -81,56 +78,6 @@ export default function End({}) {
         bonusPay += gameParams.bonusPerParticipant;
       }
     }
-  }
-
-  function generateUserListItems() {
-    const roomParticipants = [];
-    for (const idx in chatParticipants) {
-      if (
-        chatParticipants[idx].room == viewingRoom &&
-        chatParticipants[idx].name != self.name
-      ) {
-        roomParticipants.push(chatParticipants[idx]);
-      }
-    }
-
-    if (roomParticipants.length == 0) {
-      return (
-        <Typography variant="body-sm" className="note">
-          None
-        </Typography>
-      );
-    }
-    return roomParticipants.map((user) => {
-      const lastActiveDiff = (new Date().getTime() - user.active) / 1000;
-      return (
-        <ListItem key={"user-" + user.name}>
-          <ListItemAvatar>
-            <Badge
-              overlap="circular"
-              anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-              variant="dot"
-              className={lastActiveDiff < 120 ? "active" : "idle"}
-            >
-              <Avatar
-                alt={user.name}
-                src={"/assets/animal_icons/" + user.name + ".svg"}
-                sx={{ bgcolor: user.color }}
-              />
-            </Badge>
-          </ListItemAvatar>
-          <ListItemText
-            primary={user.name == self.name ? user.name + " (You)" : user.name}
-            secondary={lastActiveDiff < 120 ? "Active" : "Idle"}
-          />
-          <LikertQuestion
-            name="userAgree"
-            value={userAgreeVal}
-            onChange={(ev) => setUserAgreeVal(ev.target.value)}
-          />
-        </ListItem>
-      );
-    });
   }
 
   let ui = (
@@ -191,7 +138,7 @@ export default function End({}) {
           </tr>
           <tr>
             <td>Study Pay</td>
-            <td>{formatMoney(gameParams.basePay)}</td>
+            <td>{formatMoney(gameParams.basePay)} + {formatMoney(gameParams.discussionPay)}</td>
           </tr>
           <tr style={{ borderBottom: "solid 1px #ccc" }}>
             <td>
@@ -309,8 +256,8 @@ export default function End({}) {
         <ProgressList
           items={[
             {
-              name: "Initial Survey",
-              time: "~" + gameParams.lobbyTime.toString() + " min",
+              name: "Survey",
+              time: "~" + gameParams.surveyTime.toString() + " min",
             },
             {
               name: "Group Discussion",
