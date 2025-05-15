@@ -24,6 +24,19 @@ import {
 } from "@empirica/core/player/classic/react";
 import { msToTime } from "../utils/formatting.js";
 
+const keyframes = `
+  @keyframes ripple {
+    0% {
+      transform: scale(0.8);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2.4);
+      opacity: 0;
+    }
+  }
+`;
+
 export default function Ready({}) {
   // Useful variables
   const player = usePlayer();
@@ -81,6 +94,7 @@ export default function Ready({}) {
 
   return (
     <Stack alignItems={"center"}>
+      <style>{keyframes}</style>
       <Stack
         sx={{
           width: {
@@ -139,6 +153,27 @@ export default function Ready({}) {
             variant="contained"
             disabled={disabled}
             onClick={continueToChat}
+            className={!disabled ? "ripple-effect-button" : ""}
+            sx={{
+              position: "relative",
+              overflow: "visible",
+              "&.ripple-effect-button::before": !disabled
+                ? {
+                    content: '""',
+                    position: "absolute",
+                    display: "block",
+                    width: "200%",
+                    height: "200%",
+                    borderRadius: "50%",
+                    backgroundColor: "rgba(0, 123, 255, 0.3)",
+                    left: "-50%",
+                    top: "-50%",
+                    pointerEvents: "none",
+                    animation: "ripple 1.5s infinite linear",
+                    zIndex: -1,
+                  }
+                : {},
+            }}
           >
             Ready
           </Button>
