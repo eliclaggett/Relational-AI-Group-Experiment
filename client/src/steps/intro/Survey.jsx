@@ -75,7 +75,7 @@ export default function Survey({ next }) {
           items={[
             {
               name: "Survey",
-              time: "~" + gameParams.lobbyTime.toString() + " min",
+              time: "~" + gameParams.surveyTime.toString() + " min",
             },
             {
               name: "Group Discussion",

@@ -109,7 +109,7 @@ export default function Ready({}) {
           items={[
             {
               name: "Initial Survey",
-              time: "~" + gameParams.lobbyTime.toString() + " min",
+              time: "~" + gameParams.surveyTime.toString() + " min",
             },
             {
               name: "Group Discussion",

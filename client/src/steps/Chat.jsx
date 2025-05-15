@@ -34,7 +34,7 @@ export default function Chat({}) {
         items={[
           {
             name: "Survey",
-            time: "~" + gameParams.lobbyTime.toString() + " min",
+            time: "~" + gameParams.surveyTime.toString() + " min",
           },
           {
             name: "Group Discussion",
