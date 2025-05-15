@@ -22,6 +22,8 @@ import {
   RadioGroup,
   FormControlLabel,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
 import { usePlayer } from "@empirica/core/player/classic/react";
 import { useState, useEffect } from "react";
 import { formatMoney } from "../../utils/formatting.js";
@@ -173,6 +175,7 @@ export default function Tutorial({ next }) {
         next();
       } else {
         setStep(step + 1);
+        player.set("LastTutorialStage", step);
         setBackButtonDisabled(false);
       }
     } else {
@@ -185,6 +188,7 @@ export default function Tutorial({ next }) {
         player.set("ended", "failedTutorial");
         player.set("endReason", "failedTutorial");
         player.set("step", "end");
+        player.set("passedTutorial", false);
       }
       player.set("remainingErrors", remainingErrors - 1);
       return;
@@ -346,10 +350,14 @@ export default function Tutorial({ next }) {
               variant="body1"
               sx={{
                 color: task.completed ? "success.main" : task.id === tutorialTask ? "primary.main" : "text.secondary",
-                fontWeight: task.id === tutorialTask ? "bold" : "normal"
+                fontWeight: task.id === tutorialTask ? "bold" : "normal",
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
               }}
             >
-              {task.id}. {task.text}
+              {task.completed ? <CheckCircleIcon fontSize="small" /> : <RadioButtonUncheckedIcon fontSize="small" />}
+              {task.text}
             </Typography>
           ))}
         </Stack>
