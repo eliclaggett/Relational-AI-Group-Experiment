@@ -210,10 +210,18 @@ export default function Summary({}) {
   if (summary) {
     ui = (
       <>
-        <Typography variant="h1">Thank you for your participation.</Typography>
+        <Typography variant="h1">Study Complete</Typography>
         <Typography variant="body1">
-          We are waiting on all other participants to finish writing their
-          summaries before we can analyze them and calculate your final pay.
+          <b>Please submit this study using the completion code below.</b> We have
+          recorded your bonus in our records and will pay it via a Prolific
+          completion bonus within 24 hours. If you do not see your bonus by then,
+          please do not hesitate to contact us.
+        </Typography>
+        <Typography variant="h1">
+          <b>{gameParams.completionCode}</b>
+        </Typography>
+        <Typography variant="body1">
+          Thank you again for your participation.
         </Typography>
       </>
     );
