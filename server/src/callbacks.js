@@ -832,13 +832,7 @@ Empirica.on("game", (_, { game }) => {
 
 // Called when each participant joins the lobby
 Empirica.on("game", "startLobby", (_, { game }) => {
-  // Start a timer when the first person finishes onboarding
   console.log("lobby started");
-  
-    // const now = Date.now();
-    // const expirationTS = now + game.lobbyConfig.duration / 1000000;
-    // game.set("lobbyTimeout", new Date(expirationTS).toISOString());
-      
     // Set up a timeout to start the game when lobby ends
     setTimeout(() => {
       if (!game.get("started")) {
