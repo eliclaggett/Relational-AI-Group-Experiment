@@ -564,6 +564,7 @@ Empirica.on("player", "activeRoom", (_, { player, activeRoom }) => {
     // Update active room
     player.set("activeRoom", activeRoom);
     player.set("viewingRoom", activeRoom);
+    player.set("lastRoomChange", new Date().getTime());
   }
   Empirica.flush();
 });
@@ -791,6 +792,8 @@ Empirica.on("player", "createRoom", (_, { player, createRoom }) => {
     player.set("viewingRoom", newroomID);
     player.set("activeRoom", newroomID);
     player.set("room", newroomID);
+    player.set("lastRoomChange", new Date().getTime());
+    player.set("roomcreated", newroomID);
     const participantIdx = player.get("participantIdx");
     const chatParticipants = player.currentGame.get("chatParticipants") || {};
     if (chatParticipants[participantIdx]) {
@@ -1201,7 +1204,6 @@ Empirica.onStageStart(({ stage }) => {
     for (const player of stage.currentGame.players) {
       player.set("roomLocked", false);
       player.set("canSendMessages", false);
-      player.set("lastRoomChange", new Date().getTime());
     }
   }
 });
