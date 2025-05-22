@@ -35,25 +35,23 @@ export default function Lobby() {
     // Start a timer that we can show in the UI
     if (!lobbyTimeout) {
       game.set("startLobby", true);
-      game.set(
-        "lobbyTimeout",
-        Date.now() + parseInt(game.get("lobbyDuration")) / 1000 / 1000
-      );
+      lobbyTimeout =
+        Date.now() + parseInt(game.get("lobbyDuration")) / 1000 / 1000;
+    } else {
+      lobbyTimeout = new Date(lobbyTimeout);
     }
 
     // Poll the timer
     const interval = setInterval(() => {
-      if (!lobbyTimeout) return;
       const now = new Date();
-      const lobbyTimeoutDt = new Date(lobbyTimeout);
-      const diffMS = lobbyTimeoutDt - now;
+      const diffMS = lobbyTimeout - now;
 
       setTimeRemaining(msToTime(diffMS));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [lobbyTimeout]);
-
+  }, []);
+  
   const animalOptions = player.get("animalOptions") || [];
   const color = player.get("color");
   const selfIdentity = player.get("selfIdentity") || "";

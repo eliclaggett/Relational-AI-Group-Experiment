@@ -236,37 +236,13 @@ gameParams.topics = botTexts[gameParams.promptCategory]["topics"];
 let playerCounter = 0;
 let roomCounter = -1;
 
-if (gameParams.mode == "dev") {
-  chatParticipants[90] = {
-    name: "kangaroo",
-    color: "skyblue",
-    active: new Date().getTime(),
-    room: 0,
-  };
-
-  chatParticipants[91] = {
-    name: "antelope",
-    color: "pink",
-    active: new Date().getTime(),
-    room: 1,
-  };
-
-  chatParticipants[92] = {
-    name: "aracari",
-    color: "orange",
-    active: new Date().getTime(),
-    room: 2,
-  };
-
-  chatParticipants[93] = {
-    name: "beaver",
-    color: "blue",
-    active: new Date().getTime(),
-    room: 0,
-  };
-}
-
 const prompts = botTexts[gameParams.promptCategory];
+
+function removeChatParticipantByPID(pid, chatParticipants) {
+  if (pid in chatParticipants && pid !== "-1") {
+    delete chatParticipants[pid];
+  }
+}
 
 // Called when a participant joins the experiment
 Empirica.on("player", (ctx, { player }) => {
@@ -274,6 +250,7 @@ Empirica.on("player", (ctx, { player }) => {
   if (player.get("gameParams")) return;
 
   player.set("gameParams", gameParams);
+  // player.set("ended", false);
   player.set("remainingErrors", 2);
   player.set("playerCounter", playerCounter);
   player.set("color", colors[playerCounter]);
@@ -289,17 +266,6 @@ Empirica.on("player", (ctx, { player }) => {
   player.set("activeRoom", -1);
   player.set("joinedRooms", []);
   player.set("viewingRoom", 0);
-
-  // Initialize base chat participants
-  const baseParticipants = {
-    "-1": { name: "Moderator Bot", room: -1, color: "#f4f4f4", active: new Date().getTime() },
-    // not sure what this line is doing
-    [playerCounter]: { name: animals[playerCounter * 3], room: 0, color: colors[playerCounter], active: new Date().getTime() }
-  };
-
-  // Set initial game state
-  player.currentGame.set("chatParticipants", baseParticipants);
-
   playerCounter += 1;
 });
 
@@ -829,46 +795,19 @@ Empirica.on("game", (_, { game }) => {
   // Initialize parameters
   game.set("gameParams", gameParams);
   game.set("lobbyDuration", game.lobbyConfig.duration);
-  game.set("submitCooperationDecision", false);
   game.set("currentStage", "onboarding");
 });
 
-// Called when each participant joins the lobby
 Empirica.on("game", "startLobby", (_, { game }) => {
-  console.log("lobby started");
-    // Set up a timeout to start the game when lobby ends
-    setTimeout(() => {
-      if (!game.get("started")) {
-        console.log("Lobby timeout reached, starting game");
-        game.set("started", true);
-        const round = game.addRound({ name: "round" });
-        round.addStage({ name: "ready", duration: 60 }); // 60 seconds
-        
-        // Add three conversation rounds with transitions only after first two
-        for (let i = 1; i <= 3; i++) {
-          round.addStage({
-            name: `group-discussion-${i}`, 
-            duration: gameParams.discussionPeriod * 60 
-          });
-          if (i < 3) { 
-            round.addStage({ 
-              name: `group-discussion-transition-${i}`, 
-              duration: gameParams.transitionPeriod * 60 
-            });
-          }
-        }
-        
-        round.addStage({
-          name: "summary-task",
-          duration: gameParams.summaryTime * 60,
-        });
-        
-        for (const idx in chatRooms) {
-          game.set("chatChannel-" + idx, []);
-        }
-      }
-    }, game.get("lobbyDuration") / 1000 / 1000);
-    console.log("Set timeout for", game.lobbyConfig.duration, "seconds");
+  // Start a timer when the first person finishes onboarding
+  console.log("starting lobby");
+  if (typeof game.get("lobbyTimeout") == "undefined") {
+    const now = Date.now();
+    if (game.lobbyConfig) {
+      const expirationTS = now + game.lobbyConfig.duration / 1000000;
+      game.set("lobbyTimeout", new Date(expirationTS).toISOString());
+    }
+  }
 });
 
 Empirica.on("player", "ready", (_, { player }) => {
@@ -1082,14 +1021,47 @@ Empirica.on(
 
 Empirica.onGameStart(({ game }) => {
   console.log('Game start event received');
-  // The actual game start logic is now handled in the lobby timeout
+  const round = game.addRound({ name: "round" });
+  round.addStage({ name: "ready", duration: 30 }); // 30 seconds
+  
+  // Add three conversation rounds with transitions only after first two
+  for (let i = 1; i <= 3; i++) {
+    round.addStage({
+      name: `group-discussion-${i}`, 
+      duration: gameParams.discussionPeriod * 60 
+    });
+    if (i < 3) { 
+      round.addStage({ 
+        name: `group-discussion-transition-${i}`, 
+        duration: gameParams.transitionPeriod * 60 
+      });
+    }
+  }
+        
+  round.addStage({
+    name: "summary-task",
+    duration: gameParams.summaryTime * 60,
+  });
+  
+  for (const idx in chatRooms) {
+    game.set("chatChannel-" + idx, []);
+  }
+  // for (const player of game.players) {
+  //   const step = player.get("step");
+  //   if (!step || step === "tutorial" || step === "survey") {
+  //     player.set("ended", true);
+  //     player.set("endReason", "not-in-lobby");
+  //     player.set("step", "end");
+  //     removeChatParticipantByPID(player.get("participantIdx"), chatParticipants);
+  //     // player.exit("ended");
+  //   }    
+  // }
 });
 
 Empirica.onStageStart(({ stage }) => {
   const stageName = stage.get("name");
   console.log("stage started: " + stageName);
-  
-  // Update all players' step to match the current stage
+
   for (const player of stage.currentGame.players) {
     player.set("step", stageName);
   }
@@ -1100,13 +1072,22 @@ Empirica.onStageStart(({ stage }) => {
     
     // If this is the first conversation round, assign rooms
     if (roundNum === 1) {
-      const remainingPlayers = stage.currentGame.players.filter((p) => p.get("ready"));
-      const notReadyPlayers = stage.currentGame.players.filter(
-        (p) => p.get("ready") != true
+      const allPlayers = stage.currentGame.players;
+
+      // Keep only players who have finished the intro and clicked "Ready"
+      const remainingPlayers = allPlayers.filter(
+        (p) => p.get("ready")
       );
-      for (let i = 0; i < notReadyPlayers.length; i++) {
-        notReadyPlayers[i].set("ended", true);
-        notReadyPlayers[i].set("endReason", "not-ready");
+
+      const remainingIDs = new Set(remainingPlayers.map(p => p.id));
+      const notReadyPlayers = allPlayers.filter(p => !remainingIDs.has(p.id));
+
+      for (const p of notReadyPlayers) {
+        p.set("ended", true);
+        p.set("endReason", "not-ready");
+        // p.exit("ended");
+        p.set("step", "end");
+        removeChatParticipantByPID(player.get("participantIdx"), chatParticipants);
       }
     
       // Decide topic based on survey responses
@@ -1175,7 +1156,7 @@ Empirica.onStageStart(({ stage }) => {
       }
       stage.currentGame.set("chatRooms", chatRooms);
       stage.currentGame.set("chatParticipants", chatParticipants);
-  }
+    }
 
     // Send initial chatbot messages
     let topic = stage.currentGame.get("topic");
@@ -1194,7 +1175,9 @@ Empirica.onStageStart(({ stage }) => {
     }
     
     // Lock participants in their current rooms
-    const remainingPlayers = stage.currentGame.players.filter((p) => p.get("ready"));
+    const remainingPlayers = allPlayers.filter(
+      (p) => p.get("ready") === true && p.get("ended") === false
+    );
     for (const player of remainingPlayers) {
       player.set("roomLocked", true);
       player.set("canSendMessages", true);
