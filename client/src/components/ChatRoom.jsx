@@ -298,11 +298,16 @@ export default function ChatRoom({}) {
   }
 
   function joinRoom() {
+    let viewingRoom = player.get("viewingRoom");
     player.set("activeRoom", viewingRoom);
+    player.set("room", viewingRoom);
+    player.set("active", Date.now()); 
     const currentJoinedRooms = player.get("joinedRooms") || [];
     if (!currentJoinedRooms.includes(viewingRoom)) {
         player.set("joinedRooms", [...currentJoinedRooms, viewingRoom]);
     }
+    const participantIdx = player.get("participantIdx");
+    chatParticipants[participantIdx].room = viewingRoom;
   }
 
   function generateRoomListItems(rooms) {
