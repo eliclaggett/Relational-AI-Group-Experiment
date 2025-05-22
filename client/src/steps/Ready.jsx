@@ -61,7 +61,7 @@ export default function Ready({}) {
   function continueToChat() {
     if (player.selfIdentity != "") {
       player.set("ready", true);
-      player.set("step", "group-discussion");
+      player.set("step", "group-discussion-1");
       player.stage.set("submit", true);
     }
   }
