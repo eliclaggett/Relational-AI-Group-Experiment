@@ -375,11 +375,11 @@ export default function ChatRoom({}) {
               }
             >
               <Box
-                sx={{
-                  border: `3px solid ${getRingColor(user.opinion)}`,
-                  borderRadius: "50%",
-                  p: "2px",
-                }}
+                // sx={{
+                //   border: `3px solid ${getRingColor(user.opinion)}`,
+                //   borderRadius: "50%",
+                //   p: "2px",
+                // }}
               >
                 <Avatar
                   alt={user.name}
@@ -398,9 +398,9 @@ export default function ChatRoom({}) {
                     ? "Active"
                     : "Idle"}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                {/* <Typography variant="body2" color="text.secondary">
                   Stance: {getStanceLabel(user.opinion)}
-                </Typography>
+                </Typography> */}
               </Box>
             }
           />
