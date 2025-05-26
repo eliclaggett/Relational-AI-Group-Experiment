@@ -4,7 +4,7 @@
     "@chatscope/chat-ui-kit-react": "^2.0.3",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@empirica/core": "1.12.1",
+    "@empirica/core": "1.8.4",
     "@mui/icons-material": "^6.4.1",
     "@mui/material": "^6.4.1",
     "esbuild": "0.17.15",
