@@ -185,7 +185,7 @@ export default function Tutorial({ next }) {
       }
       // setNextButtonDisabled(true);
       if (remainingErrors <= 1) {
-        player.set("ended", "failedTutorial");
+        player.set("ended", true);
         player.set("endReason", "failedTutorial");
         player.set("step", "end");
         player.set("passedTutorial", false);
