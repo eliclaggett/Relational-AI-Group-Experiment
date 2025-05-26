@@ -32,16 +32,16 @@ import { formatMoney, msToTime } from "../../utils/formatting.js";
 import ProgressList from "../../components/ProgressList.jsx";
 import LikertQuestion from "../../components/LikertQuestion.jsx";
 
-export default function End({}) {
+export default function End({ endReason: propEndReason }) {
   const player = usePlayer();
+  const endReason = propEndReason || player.get("endReason") || "none";
   const game = useGame();
   const participantIdx = player.get("participantIdx") || 0;
-  const activeRoom = player.get("activeRoom") || 0; // TODO: Remove else
+  const activeRoom = player.get("activeRoom") || 0;
   const rooms = game.get("chatRooms"); // TODO: Change to game parameter
   const chatParticipants = game.get("chatParticipants"); // TODO: Change to game parameter
   const summary = player.get("summary");
   const gameParams = game.get("gameParams");
-  const endReason = player.get("endReason") || "none";
   const [feedback, setFeedback] = useState("");
   const hasFeedback = player.get("submitFeedback") || false;
 
@@ -102,6 +102,17 @@ export default function End({}) {
       </Typography>
     </>
   );
+  const notinlobbyUI = (
+    <>
+      <Typography variant="h1">
+        You have been removed from the study.
+      </Typography>
+      <Typography variant="body1">
+        Thank you for participating. Please cancel your participation in this
+        study as the lobby timed out.
+      </Typography>
+    </>
+  );
 
   console.log(rooms);
   const roomTitle =
@@ -109,7 +120,7 @@ export default function End({}) {
   const completeUI = (
     <>
       <Typography variant="h1">Study Complete</Typography>
-      <Typography variant="body1">
+      {/* <Typography variant="body1">
         Thank you for your patience. We have finished analyzing all
         participants' summaries and calculated your final pay.
       </Typography>
@@ -178,7 +189,7 @@ export default function End({}) {
             <td>{formatMoney(totalPay)}</td>
           </tr>
         </tfoot>
-      </Table>
+      </Table> */}
       <Typography variant="body1">
         <b>Please submit this study using the completion code below.</b> We have
         recorded your bonus in our records and will pay it via a Prolific
@@ -234,6 +245,8 @@ export default function End({}) {
     ui = completeUI;
   } else if (endReason == "not-ready") {
     ui = notReadyUI;
+  } else if (endReason == "not-in-lobby") {
+    ui = notinlobbyUI;
   }
 
   function submitFeedback() {
