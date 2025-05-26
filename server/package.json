@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@empirica/core": "1.12.1",
+    "@empirica/core": "1.8.4",
     "axios": "^1.7.9",
     "dotenv": "^16.4.7",
     "find-config": "^1.0.0",
