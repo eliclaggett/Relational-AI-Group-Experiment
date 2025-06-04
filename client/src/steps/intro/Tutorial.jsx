@@ -1,6 +1,6 @@
 /*
  * Filename: Tutorial.jsx
- * Author: Elijah Claggett
+ * Author: Elijah Claggett, Faria Huq
  *
  * Description:
  * This ReactJS file is the main tutorial of the experimental procedure.
@@ -62,11 +62,6 @@ export default function Tutorial({ next }) {
     [1, "True"],
     [2, "False"],
   ];
-  // const q5Answers = [
-  //   [1, formatMoney(gameParams.maxBonus)],
-  //   [2, formatMoney(gameParams.bonusPerParticipant)],
-  //   [3, "$0.00"],
-  // ];
 
   const [q2RadioButtons, setQ2RadioButtons] = useState([]);
   const [q4RadioButtons, setQ4RadioButtons] = useState([]);
@@ -570,8 +565,7 @@ export default function Tutorial({ next }) {
     <Stack maxWidth="100vw" direction="column">
       <ProgressList
         items={[
-          { name: "Tutorial", time: "~3 min" },
-          // { name: "Questionnaire", time: "~1 min" },
+          { name: "Tutorial", time: "~7 min" }
         ]}
         active={0}
         beforeStart={true}
