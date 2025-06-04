@@ -22,3 +22,8 @@
 .progressListItem .MuiStack-root span {
   line-height: 1.2em;
 }
+
+.timeRemaining.warning {
+  color: red;
+  font-weight: bold;
+}

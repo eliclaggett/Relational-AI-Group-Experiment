@@ -41,9 +41,12 @@ export default function ProgressList({
 
   let lobbyTimeout = game.get("lobbyTimeout") || false;
   const [lobbyTimeRemaining, setTimeRemaining] = useState("No time limit");
+  const [showWarning, setShowWarning] = useState(false);
 
   const timeLeft = stageTimer?.remaining ? stageTimer.remaining : 0;
   let timeLeftClass = "timeRemaining";
+  if (showWarning) timeLeftClass += " warning";
+  else timeLeftClass = "timeRemaining";
   let timeRemaining = msToTime(timeLeft, true);
   let remainingTxt = "until next task";
   if (stageName == "summary-task") {
@@ -74,9 +77,7 @@ export default function ProgressList({
           const totalDuration = game.get("sharedTutorialLobbyDuration");
           const remainingTime = Math.max(totalDuration - elapsedTime, 0);
           setTimeRemaining(msToTime(remainingTime * 60 * 1000, true));
-          if (remainingTime < 1) {
-            timeLeftClass += " warning"; // apply red style
-          }
+          setShowWarning(remainingTime < 4);
         }
       }, 1000);
       return () => clearInterval(interval);
