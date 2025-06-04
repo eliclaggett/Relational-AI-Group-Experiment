@@ -11,19 +11,24 @@ import Ready from "./steps/Ready.jsx";
 import End from "./steps/exit/End.jsx";
 
 export function Game() {
+  const player = usePlayer();
   const stage = useStage();
   const stageName = stage?.get("name") || "";
 
-  let ui = <End />;
-
-  if (stageName == "ready") {
-    ui = <Ready />;
-  } else if (stageName.startsWith("group-discussion-")) {
-    ui = <Chat />;
-  } else if (stageName == "summary-task") {
-    ui = <Summary />;
+  if (player?.get("ended")) {
+    const endReason = player.get("endReason");
+    console.log('this player was suspended before, throwing him out.');
+    return <End endReason={endReason} />;
   }
 
-  // also need to include Summary task here.
-  return ui;
+  if (stageName == "ready") {
+    return <Ready />;
+  } else if (stageName.startsWith("group-discussion-")) {
+    return <Chat />;
+  } else if (stageName == "summary-task") {
+    return <Summary />;
+  }
+
+  // Default fallback
+  return <End />;
 }
