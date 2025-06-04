@@ -294,7 +294,7 @@ export default function ChatRoom({}) {
   }
 
   function viewRoom(room) {
-    player.set("viewingRoom", room);
+    player.set("viewingRoom", parseInt(room));
   }
 
   function joinRoom() {
