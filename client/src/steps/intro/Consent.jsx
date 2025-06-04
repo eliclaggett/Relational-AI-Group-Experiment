@@ -7,7 +7,7 @@
  */
 
 // Imports
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Button,
@@ -22,7 +22,6 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import { usePlayer } from "@empirica/core/player/classic/react";
-import { useState } from "react";
 import { formatMoney } from "../../utils/formatting";
 
 export default function Consent({ next }) {
