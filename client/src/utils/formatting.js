@@ -15,20 +15,22 @@ function formatMoney(val) {
 }
 
 // Helper function to format time values
-function msToTime(duration) {
-  if (duration == null) {
-    return "";
-  }
-  if (duration < 0) {
-    duration = 0;
-  }
+function msToTime(duration, allowNegative = false) {
+  if (duration == null) return "";
 
-  let seconds = parseInt((duration / 1000) % 60),
-    minutes = parseInt(duration / 1000 / 60);
+  const isNegative = allowNegative && duration < 0;
+  duration = Math.abs(duration);
+
+  let seconds = parseInt((duration / 1000) % 60);
+  let minutes = parseInt(duration / 1000 / 60);
+
+  const prefix = isNegative ? "-" : "";
 
   minutes = minutes < 10 ? "0" + minutes : minutes;
   seconds = seconds < 10 ? "0" + seconds : seconds;
-  return minutes + ":" + seconds;
+
+  return `${prefix}${minutes}:${seconds}`;
 }
+
 
 export { formatMoney, msToTime };
