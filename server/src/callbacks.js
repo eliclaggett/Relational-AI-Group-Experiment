@@ -238,6 +238,7 @@ let playerCounter = 0;
 let roomCounter = -1;
 
 const prompts = botTexts[gameParams.promptCategory];
+const greetingprompt = botTexts[gameParams.promptCategory]['greetingprompt'];
 
 function removeChatParticipantByPID(pid, chatParticipants) {
   if (pid in chatParticipants && pid !== "-1") {
@@ -1044,10 +1045,19 @@ Empirica.onGameStart(({ game }) => {
   
   // Add three conversation rounds with transitions only after first two
   for (let i = 1; i <= 3; i++) {
-    round.addStage({
-      name: `group-discussion-${i}`, 
-      duration: gameParams.discussionPeriod * 60 
-    });
+    if (i == 1) {
+      round.addStage({
+        name: `group-discussion-${i}`, 
+        duration: (gameParams.discussionPeriod + 1) * 60 
+      });
+    }
+    else
+    {
+      round.addStage({
+        name: `group-discussion-${i}`, 
+        duration: gameParams.discussionPeriod * 60 
+      });
+    }
     if (i < 3) { 
       round.addStage({ 
         name: `group-discussion-transition-${i}`, 
@@ -1182,15 +1192,38 @@ Empirica.onStageStart(({ stage }) => {
     console.log('topic when moderator prompts', topic);
     for (const k of Object.keys(chatRooms)) {
       let msgs = stage.currentGame.get("chatChannel-" + k) || [];
+
+
       if (roundNum === 1) {
         msgs = [];
+      
+        // Send welcome greeting immediately
+        msgs.push({
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: greetingprompt[topic],
+        });
+      
+        stage.currentGame.set("chatChannel-" + k, msgs); // save initial messages
+      
+        // Schedule regular prompt after 60 seconds
+        setTimeout(() => {
+            const updatedMsgs = stage.currentGame.get("chatChannel-" + k) || [];
+            updatedMsgs.push({
+              sender: "-1",
+              dt: new Date().getTime(),
+              content: prompts[`prompt${roundNum}`][topic],
+            });
+            stage.currentGame.set("chatChannel-" + k, updatedMsgs);
+          }, 50000);
+      } else {
+        msgs.push({
+          sender: "-1",
+          dt: new Date().getTime(),
+          content: prompts[`prompt${roundNum}`][topic],
+        });
+        stage.currentGame.set("chatChannel-" + k, msgs);
       }
-      msgs.push({
-        sender: "-1",
-        dt: new Date().getTime(),
-        content: prompts[`prompt${roundNum}`][topic],
-      });
-      stage.currentGame.set("chatChannel-" + k, msgs);
     }
     
     // Lock participants in their current rooms

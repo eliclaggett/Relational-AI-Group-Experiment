@@ -45,7 +45,7 @@ export default function ProgressList({
 
   const timeLeft = stageTimer?.remaining ? stageTimer.remaining : 0;
   let timeLeftClass = "timeRemaining";
-  if (showWarning) timeLeftClass += " warning";
+  if (showWarning && stageName == "intro") timeLeftClass += " warning";
   else timeLeftClass = "timeRemaining";
   let timeRemaining = msToTime(timeLeft, true);
   let remainingTxt = "until next task";
