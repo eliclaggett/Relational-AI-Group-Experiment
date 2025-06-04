@@ -136,22 +136,14 @@ export default function Lobby() {
           Thank you for completing the survey.
         </Typography>
         <Typography variant="body1">
-          Once all other participants to finish before we begin the group
-          discussion task.
-        </Typography>
-        <Typography variant="body1">
-          You will wait a maximimum of {timeRemaining}.
+          You will wait a maximimum of {timeRemaining} for other participants to join.
         </Typography>
         <Typography variant="body1">
           When all participants are finished with the survey, you will have 30
           seconds to click "Ready" to continue with the study.
         </Typography>
         <Typography variant="body1">
-          While you wait, please select an identity to use for the group
-          discussion.
-        </Typography>
-        <Typography variant="body1">
-          <b>Click on the identity you would like to use during the chat.</b>
+          <b>While you wait, please select an identity to use for the group discussion.</b>
         </Typography>
         <Stack direction={"row"} gap={2}>
           {generateAnimalList(animalOptions)}
