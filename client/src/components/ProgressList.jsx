@@ -1,6 +1,6 @@
 /*
  * Filename: ProgressList.jsx
- * Author: Elijah Claggett
+ * Author: Elijah Claggett, Faria Huq
  *
  * Description:
  * This ReactJS component wraps the study completion progress indicator in a list
@@ -43,19 +43,13 @@ export default function ProgressList({
   const [lobbyTimeRemaining, setTimeRemaining] = useState("No time limit");
 
   const timeLeft = stageTimer?.remaining ? stageTimer.remaining : 0;
-  let timeLeftClass =
-    timeLeft > 5 * 1000 * 60 ? "timeRemaining" : "timeRemaining low";
-  if (timeLeft <= 0) {
-    timeLeftClass = "";
-  }
-  let timeRemaining = msToTime(
-    stageTimer?.remaining ? stageTimer.remaining : 0
-  );
+  let timeLeftClass = "timeRemaining";
+  let timeRemaining = msToTime(timeLeft, true);
   let remainingTxt = "until next task";
   if (stageName == "summary-task") {
     remainingTxt = "until study ends";
   } else if (stageName == "intro") {
-    remainingTxt = "until study starts";
+    remainingTxt = "to complete tutorial";
     timeRemaining = lobbyTimeRemaining;
   } else if (stageName == "end") {
     remainingTxt = "Study complete";
@@ -71,24 +65,23 @@ export default function ProgressList({
   useEffect(() => {
     // Start a timer that we can show in the UI
     if (!startedGame) {
-      // Poll the timer
       const interval = setInterval(() => {
-        let lobbyTimeoutDt = 0;
-        if (!lobbyTimeout) {
-          return;
-        } else {
-          lobbyTimeoutDt = new Date(lobbyTimeout);
-        }
-
         const now = new Date();
-        const diffMS = lobbyTimeoutDt - now;
-
-        setTimeRemaining(msToTime(diffMS));
+        const startTimeStr = game.get("sharedStartTime");
+        if (startTimeStr) {
+          const startTime = new Date(startTimeStr);
+          const elapsedTime = (now - startTime) / 1000 / 60; // in minutes
+          const totalDuration = game.get("sharedTutorialLobbyDuration");
+          const remainingTime = Math.max(totalDuration - elapsedTime, 0);
+          setTimeRemaining(msToTime(remainingTime * 60 * 1000, true));
+          if (remainingTime < 1) {
+            timeLeftClass += " warning"; // apply red style
+          }
+        }
       }, 1000);
       return () => clearInterval(interval);
-    } else {
     }
-  }, [startedGame, lobbyTimeout]);
+  }, [startedGame]);
 
   let listItemUI = [];
   let itemIdx = 0;
@@ -135,7 +128,7 @@ export default function ProgressList({
       <div className={"timeLeft-txt " + timeLeftClass}>
         {!startedGame || stageName == "end"
           ? timeRemaining
-          : msToTime(timeLeft)}
+          : msToTime(timeLeft, true)}
         {stageName != "end" ? <br /> : ""}
         {remainingTxt}
       </div>

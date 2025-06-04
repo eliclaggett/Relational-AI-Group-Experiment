@@ -217,6 +217,7 @@ const gameParams = {
   inactivityWarning: 50, // 50 seconds
   discussionPeriod: 3, // in minutes
   transitionPeriod: 1, // in minutes
+  tutorialTime: 6, // in minutes
   chatTime: 12,
   lobbyTime: 5,
   surveyTime: 3,
@@ -227,7 +228,7 @@ const gameParams = {
     q3: "I have reviewed the eligibility requirements listed in the Participant Requirements section of this consent form and certify that I am eligible to participate in this research, to the best of my knowledge.",
     q4: "I want to participate in this research and continue with the game.",
     q5: "I will refrain from sharing private, sensitive or identifiable information about myself or others that I would not want shared outside the research setting."
-  },
+  }
 };
 
 gameParams.topics = botTexts[gameParams.promptCategory]["topics"];
@@ -324,6 +325,15 @@ Empirica.on(
       }
     }
     player.set("passedConsentForm", passedConsentForm);
+
+    // Set shared start time and duration if not already set
+    if (!player.currentGame.get("sharedStartTime")) {
+      const now = new Date().toISOString();
+      player.currentGame.set("sharedStartTime", now);
+      // Set total duration for tutorial + lobby
+      const totalDuration = player.currentGame.lobbyConfig.duration/60/1000/1000/1000 + gameParams.tutorialTime;
+      player.currentGame.set("sharedTutorialLobbyDuration", totalDuration);
+    }
 
     if (passedConsentForm) {
       // Initialize tutorial directly
@@ -795,22 +805,25 @@ Empirica.on("player", "resetInactivity", (_, { player }) => {
 });
 
 
-// Called when the "game" (experiment) starts, aka, when at least one participant joins the lobby
+// Called when the "game" (experiment) starts
 Empirica.on("game", (_, { game }) => {
   // Initialize parameters
   game.set("gameParams", gameParams);
-  game.set("lobbyDuration", game.lobbyConfig.duration);
   game.set("currentStage", "onboarding");
 });
 
 Empirica.on("game", "startLobby", (_, { game }) => {
-  // Start a timer when the first person finishes onboarding
-  console.log("starting lobby");
+  // Start a timer when the first person joins lobby
   if (typeof game.get("lobbyTimeout") == "undefined") {
     const now = Date.now();
     if (game.lobbyConfig) {
       const expirationTS = now + game.lobbyConfig.duration / 1000000;
       game.set("lobbyTimeout", new Date(expirationTS).toISOString());
+      game.set("lobbyDuration", game.lobbyConfig.duration/60/1000/1000/1000);
+      const elapsedTime = (now - new Date(game.get("sharedStartTime"))) / 1000 / 60; // in minutes
+      const skippedTime = gameParams.tutorialTime - elapsedTime; // time not being counting towards anymore
+      const originalsharedTutorialLobbyDuration = game.get("sharedTutorialLobbyDuration");
+      game.set("sharedTutorialLobbyDuration", originalsharedTutorialLobbyDuration - skippedTime);
     }
   }
 });

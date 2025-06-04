@@ -32,23 +32,36 @@ export default function Lobby() {
   }, []);
 
   useEffect(() => {
-    // Start a timer that we can show in the UI
     if (!lobbyTimeout) {
       game.set("startLobby", true);
-      lobbyTimeout =
-        Date.now() + parseInt(game.get("lobbyDuration")) / 1000 / 1000;
+  
+      const maxWait = 3000; // up to 3s
+      const checkInterval = 100;
+      let waited = 0;
+      const waitForLobbyDuration = setInterval(() => {
+        const lobbyDuration = game.get("lobbyDuration");
+        if (lobbyDuration != null) {
+          console.log("lobbyDuration", lobbyDuration);
+          lobbyTimeout = Date.now() + lobbyDuration * 60 * 1000;
+          clearInterval(waitForLobbyDuration);
+        } else {
+          waited += checkInterval;
+          if (waited >= maxWait) {
+            console.warn("lobbyDuration not found after 3s");
+            clearInterval(waitForLobbyDuration);
+          }
+        }
+      }, checkInterval);
     } else {
       lobbyTimeout = new Date(lobbyTimeout);
     }
 
-    // Poll the timer
     const interval = setInterval(() => {
       const now = new Date();
       const diffMS = lobbyTimeout - now;
-
       setTimeRemaining(msToTime(diffMS));
     }, 1000);
-
+  
     return () => clearInterval(interval);
   }, []);
   
