@@ -1202,10 +1202,10 @@ Empirica.onStageStart(({ stage }) => {
           sender: "-1",
           dt: new Date().getTime(),
           content: greetingprompt[topic],
-        });
-      
+        });  
         stage.currentGame.set("chatChannel-" + k, msgs); // save initial messages
-      
+        Empirica.flush();
+        
         // Schedule regular prompt after 60 seconds
         setTimeout(() => {
             const updatedMsgs = stage.currentGame.get("chatChannel-" + k) || [];
@@ -1215,6 +1215,7 @@ Empirica.onStageStart(({ stage }) => {
               content: prompts[`prompt${roundNum}`][topic],
             });
             stage.currentGame.set("chatChannel-" + k, updatedMsgs);
+            Empirica.flush();
           }, 50000);
       } else {
         msgs.push({
@@ -1223,6 +1224,7 @@ Empirica.onStageStart(({ stage }) => {
           content: prompts[`prompt${roundNum}`][topic],
         });
         stage.currentGame.set("chatChannel-" + k, msgs);
+        Empirica.flush();
       }
     }
     
