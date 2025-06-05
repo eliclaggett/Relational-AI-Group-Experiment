@@ -257,10 +257,6 @@ export default function Tutorial({ next }) {
           First, you will complete a brief survey of your opinions.
         </Typography>
 
-        {/* After you finish, you will be placed in a waiting room for a maximum of {gameParams.maxWaitTime} minutes. While you are
-          waiting, you can pick out a unique name and icon to represent yourself
-          in the group chat. */}
-
         <Typography variant="h3">
           Now, let's practice! Here is an example question: Do you like ice cream?
         </Typography>
@@ -456,14 +452,9 @@ export default function Tutorial({ next }) {
         <img src="assets/tutorial_tip-summary2.png" style={{ width: "65%", margin: "0 auto", display: "block" }} />
 
         <Typography variant="body1">
-        Your bonus depends on both your own report quality and the report quality of your chatroom members. Specifically:
-          <b>
-          Your bonus = $1 × (number of qualified reports from the room) − $0.50 × (number of members in the room)
-          </b>
+        Your bonus depends on both your own report quality and the report quality of your chatroom members. 
         </Typography>
-        <Typography variant="body1">
-        If this results in a bonus of $0.00 or less, you will receive only the base pay for participating.
-        </Typography>
+        
         <Typography variant="body1">
         To maximize your bonus:
         <ul style={{ marginTop: 8, marginBottom: 0, paddingLeft: '1.2em' }}>
@@ -472,19 +463,6 @@ export default function Tutorial({ next }) {
           <li>You don’t need to agree with others. What matters is mutual effort and good-faith participation.</li>
         </ul>
         </Typography>
-        {/* <FormControl sx={{}}>
-          <FormLabel>
-            How high could your bonus reach if you are in a chat room with five
-            members (including yourself)?
-          </FormLabel>
-          <RadioGroup
-            name="q5"
-            onChange={handleRadioButtonChange}
-            value={radioButtonVals["q5"]}
-          >
-            {q5RadioButtons}
-          </RadioGroup>
-        </FormControl> */}
       </Stack>
     );
   } else if (step == 7) {
@@ -565,7 +543,7 @@ export default function Tutorial({ next }) {
     <Stack maxWidth="100vw" direction="column">
       <ProgressList
         items={[
-          { name: "Tutorial", time: "~7 min" }
+          { name: "Tutorial", time: "~5-7 min" }
         ]}
         active={0}
         beforeStart={true}

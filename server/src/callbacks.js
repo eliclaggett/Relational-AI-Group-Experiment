@@ -218,10 +218,10 @@ const gameParams = {
   discussionPeriod: 3, // in minutes
   transitionPeriod: 1, // in minutes
   tutorialTime: 6, // in minutes
-  chatTime: 12,
+  chatTime: 13,
   lobbyTime: 5,
   surveyTime: 3,
-  summaryTime: 3,
+  summaryTime: 5,
   consentQuestions: {
     q1: "I am age 18 or older and in the United States.",
     q2: "I have read and understand the information above.",
@@ -1205,7 +1205,7 @@ Empirica.onStageStart(({ stage }) => {
         });  
         stage.currentGame.set("chatChannel-" + k, msgs); // save initial messages
         Empirica.flush();
-        
+
         // Schedule regular prompt after 60 seconds
         setTimeout(() => {
             const updatedMsgs = stage.currentGame.get("chatChannel-" + k) || [];

@@ -82,11 +82,10 @@ export default function End({ endReason: propEndReason }) {
 
   let ui = (
     <>
-      <Typography variant="h1">Study ended unexpectedly.</Typography>
+      <Typography variant="h1">You have been removed from the study.</Typography>
       <Typography variant="body1">
         Thank you for participating. Please cancel your participation in this
-        study as it has experienced a technical error and contact the researcher
-        for more information.
+        study as the study timed out.
       </Typography>
     </>
   );

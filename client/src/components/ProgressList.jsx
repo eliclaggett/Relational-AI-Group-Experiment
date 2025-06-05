@@ -50,7 +50,7 @@ export default function ProgressList({
   let timeRemaining = msToTime(timeLeft, true);
   let remainingTxt = "until next task";
   if (stageName == "summary-task") {
-    remainingTxt = "until study ends";
+    remainingTxt = "to complete the summary";
   } else if (stageName == "intro") {
     remainingTxt = "to complete tutorial";
     timeRemaining = lobbyTimeRemaining;
