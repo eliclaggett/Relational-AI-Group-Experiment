@@ -2,7 +2,11 @@ factors:
     - name: playerCount
       values:
         - value: 999
+        - value: 15
 treatments:
     - name: Control
       factors:
         playerCount: 999
+    - name: pilot
+      factors:
+        playerCount: 15
