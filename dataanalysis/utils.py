@@ -49,6 +49,21 @@ def prettyPrintChats(msgs, stagetimeStamps=None, skipEmpty=True):
             print(f"{msg['dt']}: \"{msg['sender']}\",\"{msg['content']}\"")
     print(']')
 
+def getMsgCount(msgs, stagetimeStamps, skipEmpty=True):
+    total_message_per_stage = {}
+    for each_stage in stagetimeStamps: total_message_per_stage[each_stage['name']] = 0
+    for msg in msgs:
+        for entry_id in range(len(stagetimeStamps)-1):
+            if stagetimeStamps[entry_id]['startTime']<= msg['dt'] and stagetimeStamps[entry_id+1]['startTime']>= msg['dt']: 
+                stageName = stagetimeStamps[entry_id]['name']
+                if 'ready' in stageName or 'transition' in stageName:
+                    stageName = stagetimeStamps[entry_id+1]['name']
+                    
+                total_message_per_stage[stageName] += 1 
+                break
+        
+    return total_message_per_stage
+
 # --------------------------------------------------------------------------
 # Data processing ----------------------------------------------------------
 # --------------------------------------------------------------------------
@@ -71,6 +86,8 @@ def readDataFiles(selected_trials, data_path):
                     if jline['kind'] == 'Scope':
                         id = jline['obj']['id']
                         kind = jline['obj']['kind']
+                        dt = jline['obj']['createdAt']
+                        # scopes[kind][id] = {'dt': dt, 'val': v}
                         scopes[kind][id] = {}
                         id2kind[id] = kind
                     if jline['kind'] == 'Attribute' and jline['obj']['key'][0:4] != 'ran-':
