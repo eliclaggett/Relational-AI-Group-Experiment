@@ -3,12 +3,12 @@ import { EmpiricaContext } from "@empirica/core/player/classic/react";
 import { EmpiricaMenu, EmpiricaParticipant } from "@empirica/core/player/react";
 import React from "react";
 import { Game } from "./Game";
-import IdentitySelect from "./steps/IdentitySelect.jsx";
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import Join from "./steps/intro/Join.jsx";
 import Recaptcha from "./steps/intro/Recaptcha.jsx";
 import Consent from "./steps/intro/Consent.jsx";
 import Lobby from "./steps/intro/Lobby.jsx";
+import NoGame from "./steps/NoGame.jsx";
 import Tutorial from "./steps/intro/Tutorial.jsx";
 import Survey from "./steps/intro/Survey.jsx";
 import "./styleOverrides.scss";
@@ -75,6 +75,7 @@ export default function App() {
               introSteps={introSteps}
               exitSteps={exitSteps}
               lobby={Lobby}
+              noGames={NoGame}
               playerCreate={Join}
             >
               <Game />
