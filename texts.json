@@ -1,5 +1,4 @@
 {
-  "welcomeMessage": "Welcome to the chat room! Please discuss your opinions about the following news story.",
   "real": {
     "topics": [
       "I would want my kids to be taught evolution as a fact of biology",
@@ -10,65 +9,44 @@
       "Restrictions to stop the spread of COVID-19 went too far",
       "I want stricter immigration requirements into the U.S."
     ],
+    "greetingprompt": [
+      "Alright before we dive in, quick question: What\"s something small that made your day better recently?",
+      "Alright before we dive in, quick question: Would you rather fight 1 horse-sized duck or 100 duck-sized horses?",
+      "Alright before we dive in, quick question: If you could teleport to any place right now, where would you go?",
+      "Alright before we dive in, quick question: What’s a line from a movie or show that’s stuck in your head for years?",
+      "Alright before we dive in, quick question: If your life right now were a genre, what would it be—comedy, thriller, documentary?",
+      "Alright before we dive in, quick question: Pineapple on pizza: yay or nay?",
+      "Alright before we dive in, quick question: Is cereal a soup? Why or why not?"
+    ],
     "prompt1": [
-      "David Campbell, a teacher in Orange Park, FL admitted to teaching inaccurate simplifications about evolution as long as he could convince religious students that evolution is real. What do you think about this story?",
-      "The parents of a Michigan gunman who killed four high school students in 2021 are now being tried for involuntary manslaughter because they purchased the weapon for their son. What do you think about this story?",
-      "Lockheed Martin, which has spent the past 20 years developing a new F-35 fighter jet, is projected to receive over 1.7 trillion dollars for aircraft that continue to malfunction and face delays. Some believe it will never be ready to fly. What are your reactions to hearing this?",
-      "People are outraged at the finding that public schools in New York City have spent over $200,000 doing drag queen story hours which have been suspected of “grooming” children. What are your reactions to recent stories like these?",
-      "In response to the U.S. government continuing to increase restrictions on fossil fuel use, former Energy Secretary Rick Perry has released a statement saying that these skyrocketing energy prices are \"killing America.\" What do you think?",
-      "Regarding the U.S'. response to the COVID-19 pandemic, Supreme Court Justice Neil Gorsuch said we \"experienced the greatest intrusions on civil liberties in the peacetime history of this country.\" Do you think COVID-19 restrictions went too far?",
-      "Representative Elise Stefanik has stated that the U.S. is \"sacrificing America's children's safety and happiness to prioritize the needs of illegals\" referring to the influx of migrants into New York City. Do you share this opinion?"
+      "Cool—let’s move into our actual discussion topic now… \nIf your kid came home confused about evolution because it \"didn’t match their religion,\" how would you want their teacher to respond?",
+      "Cool—let’s move into our actual discussion topic now… \nThe parents of a Michigan gunman who killed four high school students in 2021 are now being tried for involuntary manslaughter because they purchased the weapon for their son. What do you think about this story?",
+      "Cool—let’s move into our actual discussion topic now… \nDo you feel proud or concerned when you hear how much the U.S. spends on the military?",
+      "Cool—let’s move into our actual discussion topic now… \nShould schools talk about different kinds of families (like two moms or two dads)?",
+      "Cool—let’s move into our actual discussion topic now… \nIf your bills went up $10/month to help stop climate change, would you be okay with that?",
+      "Cool—let’s move into our actual discussion topic now… \nRegarding the U.S'. response to the COVID-19 pandemic, Supreme Court Justice Neil Gorsuch said we \"experienced the greatest intrusions on civil liberties in the peacetime history of this country.\" Do you think COVID-19 restrictions went too far?",
+      "Cool—let’s move into our actual discussion topic now… \nRepresentative Elise Stefanik has stated that the U.S. is \"sacrificing America's children's safety and happiness to prioritize the needs of illegals\" referring to the influx of migrants into New York City. Do you share this opinion?"
     ],
     "prompt2": [
-      "Now, exchange your opinions on the way evolution should be taught in schools. Would you want your kids learning it?",
-      "Now, exchange your opinions on the degree that gun rights should be protected or abolished.",
-      "Now, exchange your opinions on how much the military should be funded. How much of your tax dollars would you be willing to provide?",
+      "Should science class stick strictly to science, or should it make room for religious beliefs too?",
+      "In your ideal society, are guns commonplace or rare?",
+      "If the government had to cut spending, would you pick the military or something else?",
       "Now, exchange your opinions on the inclusion of gay and transgender stories in public schools. How would you feel if your children had access to these?",
-      "Now, exchange your feelings about the severity of global warming.",
-      "Now, exchange your opinions on the way the COVID-19 pandemic was handled.",
-      "Now, discuss how you feel immigration affects society."
+      "In response to the U.S. government continuing to increase restrictions on fossil fuel use, former Energy Secretary Rick Perry has released a statement saying that these skyrocketing energy prices are 'killing America.' What do you think?",
+      "Were mask mandates more about public health or controlling people?",
+      "Do you think immigration is mostly a net benefit or net burden for the country?"
     ],
     "prompt3": [
-      "Should teachers be punished for choosing to teach creationism as an alternative explanation?",
+      "Imagine two schools—one teaches only evolution, the other adds biblical creation. Which would you feel better about sending your child to?",
       "What do you think decreasing access to guns will do to society?",
       "Is there meaning to having the strongest military if it doesn't get involved in world conflicts?",
       "Should teachers and books in public schools be banned from discussing sexuality and gender?",
-      "How much can economic prosperity be sacrificed to prevent climate change?",
-      "Do you think the CDC is a trustworthy source of information?",
+      "Would you rather live in a world with higher taxes but cleaner energy, or lower taxes with higher pollution?",
+      "If another pandemic started, would you support strong lockdowns or let people choose their risk?",
       "How would your opinions change if immigrants were given more social support services like food stamps and medicare?"
     ]
   },
   "pgh": {
-    "topics": [
-      "Living in Shadyside is better than living in Squirrel Hill",
-      "Life is better without owning a car",
-      "Pittsburgh is actually a great place to spend your 20s",
-      "Eating iftar at home is better than eating at ICP.",
-      "UPitt cares about their students more than CMU"
-    ],
-    "prompt1": [
-      "Let's get straight to the point: If you had to pick between Shadyside and Squirrel Hill for the entirety of your PhD, which would you choose and why?",
-      "Owning a car in Pittsburgh: essential for survival, or a symbol of having fully assimilated into suburban despair?",
-      "If you're spending your 20s in Pittsburgh, are you making the best decision of your life or just putting off moving to a better city for as long as possible?",
-      "Where do you find more comfort to eat iftar?",
-      "Which one do you think have a better student community?"
-    ],
-    "prompt2": [
-      "Some people say Shadyside is just \"Oakland for people with generational wealth\" while others claim Squirrel Hill is only good if you're married with kids. Does the neighborhood you live in actually reflect your personality or life stage or is it just about convenience?",
-      "People love to say Pittsburgh is a \"walkable city\" but how much of that is just CMU grad students coping with the fact that they can't afford a car? Does not having a car make you more connected to the city... or just more trapped in your own little bubble?",
-      "Some people say Pittsburgh is the perfect city for your 20s because it's cheap. Others say it's perfect because there's nothing to do, so you're forced to focus on your work. Which version feels more true and why?",
-      "Which place has more variations?",
-      "What do you think of the work-life balance in CMU and UPitt?"
-    ],
-    "prompt3": [
-      "If CMU housing stipends were doubled overnight, would everyone still be fighting over these two neighborhoods or would half the student population quietly move to Bakery Square and never look back? What does that tell us about what people really value in Pittsburgh living?",
-      "In 50 years, will Pittsburgh be a walkable urban utopia... or will the self-driving Ubers just be circling around the same potholes while everyone in Shadyside still waits 25 minutes for the 64 bus?",
-      "Do you think you'd be a fundamentally different person if you were doing your PhD in New York, San Francisco, or Berlin instead of Pittsburgh? Is the city shaping us more than we realize... or are we all just temporarily occupying space here until we leave for somewhere cooler?",
-      "Do you think it takes too much time to commute to ICP?",
-      "Which one do you think have more perks for students?"
-    ]
-  },
-  "pgh2": {
     "topics": [
       "Living in Shadyside is better than living in Squirrel Hill",
       "Life is better without owning a car",
