@@ -34,6 +34,9 @@ import {
   TextField,
   Tooltip,
   Typography,
+  FormControl,
+  RadioGroup,
+  Radio,
 } from "@mui/material";
 import TagIcon from "@mui/icons-material/Tag";
 import AddIcon from "@mui/icons-material/Add";
@@ -109,6 +112,9 @@ export default function ChatRoom({}) {
   const [currentActivityDiff, setCurrentActivityDiff] = useState(0);
   const [lastLocalActive, setLastLocalActive] = useState(Date.now());
   const localInactivityDiff = (Date.now() - lastLocalActive) / 1000;
+
+  // Topic rating state
+  const [topicRating, setTopicRating] = useState(player.get("opinion") || "3");
 
   const roomLocked = player.get("roomLocked") || false;
   const canSendMessages = player.get("canSendMessages") !== false;
@@ -211,6 +217,13 @@ export default function ChatRoom({}) {
     return () => clearInterval(interval);
   }, [stageName, gameParams, player]);  
 
+  // Sync topic rating with player's opinion
+  useEffect(() => {
+    if (self.opinion !== undefined) {
+      setTopicRating(self.opinion.toString());
+    }
+  }, [self.opinion]);
+
   function handleMsgChange(ev) {
     let currentDrafts = drafts;
     currentDrafts[viewingRoom] = ev.target.value;
@@ -231,6 +244,11 @@ export default function ChatRoom({}) {
   function handleSend() {
     if (!canSendMessages) {
       setTooltipOpen(true);
+      return;
+    }
+
+    // Prevent sending empty or whitespace-only messages
+    if (!drafts[activeRoom] || drafts[activeRoom].trim() === "") {
       return;
     }
 
@@ -466,6 +484,19 @@ export default function ChatRoom({}) {
     setDrafts(currentDrafts);
   }
 
+  function handleTopicRatingChange(event) {
+    const newRating = event.target.value;
+    setTopicRating(newRating);
+    if (stageName.includes("group-discussion")) {
+      player.set("opinion", newRating);
+      // Update the participant's opinion in the chat participants
+      if (chatParticipants[participantIdx]) {
+        chatParticipants[participantIdx].opinion = parseInt(newRating);
+          game.set("chatParticipants", chatParticipants);
+      }
+    }
+  }
+
   const currentRoom = rooms[viewingRoom] || { title: "Loading..." };
 
   const shouldShowTutorialSuggestion = stageName === "intro" &&
@@ -659,6 +690,56 @@ export default function ChatRoom({}) {
             />
           </ListItem>
         </List>
+        {/* Topic Rating Section - Only show during group discussion */}
+        {stageName.includes("group-discussion") && (
+          <Container sx={{ mt: 2, mb: 2 }}>
+            {(() => {
+              const topicIdx = game.get("topic");
+              const topicString = gameParams.topics?.[topicIdx] || "";
+              return (
+                <>
+                  <Typography variant="body1" className="headerTxt" sx={{ mb: 1 }}>
+                    Your stance on: {topicString}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {/* Rate your agreement with the discussion topic */}
+                  </Typography>
+                </>
+              );
+            })()}
+            <FormControl component="fieldset" sx={{ width: '100%' }}>
+              <RadioGroup
+                row
+                name="topicRating"
+                value={topicRating}
+                onChange={handleTopicRatingChange}
+                sx={{ justifyContent: 'center', gap: 1 }}
+              >
+                {[
+                  { label: "Strongly disagree", value: "0" },
+                  { label: "Disagree", value: "1" },
+                  { label: "Slightly disagree", value: "2" },
+                  { label: "Neutral", value: "3" },
+                  { label: "Slightly agree", value: "4" },
+                  { label: "Agree", value: "5" },
+                  { label: "Strongly agree", value: "6" },
+                ].map((option) => (
+                  <Box key={option.value} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
+                    <Radio
+                      value={option.value}
+                      disabled={!stageName.includes("group-discussion")}
+                      size="small"
+                      sx={{ p: 0.5 }}
+                    />
+                    <Typography variant="caption" sx={{ textAlign: 'center', mt: 0.5, maxWidth: 70 }}>
+                      {option.label}
+                    </Typography>
+                  </Box>
+                ))}
+              </RadioGroup>
+            </FormControl>
+          </Container>
+        )}
         <Typography variant="body1" className="headerTxt">
           Participants in room
         </Typography>

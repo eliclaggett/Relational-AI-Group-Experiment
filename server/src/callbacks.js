@@ -166,6 +166,8 @@ const shapes = [
   "chevron",
 ];
 
+const opinionStringValues = ["Strongly Disagree, Disagree, Slightly Disagree, Neutral, Slightly Agree, Agree, Strongly Agree"];
+
 const readyPlayerList = new Set();
 // shapes are also chat channels
 
@@ -200,21 +202,21 @@ const botTexts = JSON.parse(
 
 const gameParams = {
   mode: "prod",
-  condition: "control", // control, personal, relational-static, relational-dynamic
+  condition: "personal", // control, personal, relational-static, relational-dynamic
   promptCategory: "real",
   version: "May 2025",
   completionCode: "C8LP8FSF",
   basePay: 1.5,
   minPlayersPerRoom: 3,
   maxPlayersPerRoom: 3,
-  studyTime: 25,
+  studyTime: 30,
   surveyPay: 1.5,
   discussionPay: 3,
   bonusPerParticipant: 0.5,
   maxBonus: 2.5,
   maxWaitTime: 5,
-  inactivityMax: 120, // 120 seconds
-  inactivityWarning: 50, // 50 seconds
+  inactivityMax: 120, // in seconds
+  inactivityWarning: 50, // in seconds
   discussionPeriod: 3, // in minutes
   transitionPeriod: 1, // in minutes
   tutorialTime: 6, // in minutes
@@ -845,15 +847,17 @@ Empirica.on(
       let activeRoom = player.get("activeRoom");
       let previous_convo = player.currentGame.get("chatChannel-" + activeRoom);
       let PID = player.get("participantIdx");
+      let greetingsession = player.currentGame.get("greetingsession");
 
       // Check if participant has sent any messages in the current room
       // const hasParticipantSentMessage = previous_convo.some(msg => msg.sender === PID.toString());
       const hasParticipantSentMessage = previous_convo.length > 0;
       console.log('requestAIAssistance fired because.', PID, 'has no message in', previous_convo);
-      if (hasParticipantSentMessage)
+      if (hasParticipantSentMessage && !greetingsession)
       {
         console.log('requestAIAssistance processing.');
-        let opinion = player.get("surveyAnswers")[game_topic];
+        let opinion = player.get("opinion");
+        opinion = opinionStringValues[opinion];
         console.log('topics', topics, 'game_topic', game_topic, 'opinion', opinion);
         let chatLog = "";
         for (const msg of previous_convo) {
@@ -867,22 +871,28 @@ Empirica.on(
             {
               role: "system",
               content:
-                "Your task is to generate message suggestion in a group conversation. The user with ID -1 represents the moderator who is just overseeing the conversation among the remaining members.",
+                `You are an AI assistant supporting a participant in a group conversation. The user with ID -1 is a passive moderator. Your job is to generate message suggestions ONLY for the participant ${PID}$.`,
             },
             {
               role: "user",
               content: `Topic of conversation: ${game_topic}
               Previous Conversation: ${chatLog}
 
-              Now suggest a message response for ${PID}$ who rated the discussion topic ${opinion}. 
-              Try to keep the suggestion as short as possible.
-              Pay heed to the participant's previous message style and word structure so it feels adapted to them.
-              You must follow the standard of casual conversations -- so that it is not too wordy and formal.
-              Do NOT make the suggestions too long (1/2 sentences at max). 
-              Do NOT include '${PID}$:' in your suggestions.
+              Now suggest a message response for ${PID}$ who rated the discussion topic - '${opinion}'. Your suggestion should:
+              - Strongly reflect ${PID}$'s personal opinion and tone, regardless of whether others agree.
+              - Mirror their **language style** and **stance** exactly, including punctuation, assertiveness, and level of formality.
+              - Avoid using softening phrases (e.g., "I understand you", "maybe", "perhaps", "everyone has a point").
+              - If others disagree, you may suggest direct questions like "Why would you think that?" or "How does that make sense to you?" but **do not** imply you are persuaded or compromising.
+              - It is okay to openly disagree with others. Your suggestion should confidently express the participant’s belief, even if it contradicts what others have said. You can give a brief justification or ask critical questions that challenge others’ viewpoints — similar to a debate style — as long as the tone reflects the participant’s usual messaging pattern.
+              - Keep it casual and short (1–2 sentences max), as in everyday group chats.
+              - Do **not** prefix the suggestion with '${PID}$:'.
+              - Focus on reinforcing their position or prompting others to explain themselves.
 
-              Your response must follow the JSON format: 
-              {"SuggestionReasoning": Your reasoning, "Suggestion": {your suggestion for ${PID}$} } }`,
+              Your response must follow this valid JSON format: 
+              {
+                "SuggestionReasoning": "Explain why this suggestion reflects ${PID}$’s belief and tone", 
+                "Suggestion": "Your suggestion for ${PID}$"
+              }`,
             },
           ];
         } else if (gameParams.condition == "relational-static") {
@@ -1165,6 +1175,7 @@ Empirica.onStageStart(({ stage }) => {
         remainingPlayers[i].set("active", new Date().getTime());
         remainingPlayers[i].set("activeRoom", roomCounter);
         remainingPlayers[i].set("joinedRooms", [roomCounter]);
+        remainingPlayers[i].set("opinion", opinion);
         chatParticipants[playerIdx] = {
           name: remainingPlayers[i].get("selfIdentity"),
           room: roomCounter,
@@ -1205,6 +1216,7 @@ Empirica.onStageStart(({ stage }) => {
         });  
         stage.currentGame.set("chatChannel-" + k, msgs); // save initial messages
         Empirica.flush();
+        stage.currentGame.set("greetingsession", true);
 
         // Schedule regular prompt after 60 seconds
         setTimeout(() => {
@@ -1215,6 +1227,7 @@ Empirica.onStageStart(({ stage }) => {
               content: prompts[`prompt${roundNum}`][topic],
             });
             stage.currentGame.set("chatChannel-" + k, updatedMsgs);
+            stage.currentGame.set("greetingsession", false);
             Empirica.flush();
           }, 50000);
       } else {
