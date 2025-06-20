@@ -11,26 +11,17 @@ import React, { useState, useEffect } from "react";
 import {
   usePlayer,
   useGame,
-  useStageTimer,
-  useStage,
 } from "@empirica/core/player/classic/react";
 import {
   Alert,
-  Avatar,
-  Badge,
   Button,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   Stack,
-  Table,
   TextField,
   Typography,
 } from "@mui/material";
 
 import { formatMoney, msToTime } from "../../utils/formatting.js";
 import ProgressList from "../../components/ProgressList.jsx";
-import LikertQuestion from "../../components/LikertQuestion.jsx";
 
 export default function End({ endReason: propEndReason }) {
   const player = usePlayer();
