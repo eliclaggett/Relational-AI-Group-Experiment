@@ -12,6 +12,8 @@ export function parseAIResponse(response) {
   try {
     // Remove potential formatting like triple backticks and "json" prefix
     response = response.trim().replace(/^```json\n?|```$/g, "").replace(/^json\s*/, "");
+    response = response.replace(/\\"/g, '"'); // naive fix for wrongly escaped quotes
+
     const parsedData = JSON.parse(response);
     const normalizedData = {};
     for (const key in parsedData) {
