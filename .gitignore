@@ -10,3 +10,6 @@ package-lock.json
 *.tar.zst
 *.pem
 log*
+*.jpg
+*.json
+*checkpoint*

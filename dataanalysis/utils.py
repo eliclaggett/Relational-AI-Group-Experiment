@@ -118,7 +118,7 @@ def readDataFiles(selected_trials, data_path):
         if len(g_t) > 0:
             game_id = g_t.index[0]
             print('trial', trial, 'game_id', game_id)
-
+            g_t["trial_name"] = trial
             player_dict_multi[game_id] = p_t
             game_dict_multi[game_id] = g_t
             stage_dict_multi[game_id] = s_t
