@@ -202,9 +202,9 @@ const botTexts = JSON.parse(
 
 const gameParams = {
   mode: "prod",
-  condition: "personal", // control, personal, relational-static, relational-dynamic
+  condition: "control", // control, personal, relational-static, relational-dynamic
   promptCategory: "real",
-  version: "May 2025",
+  version: "June 2025",
   completionCode: "C8LP8FSF",
   basePay: 1.5,
   minPlayersPerRoom: 3,
