@@ -456,6 +456,7 @@ export default function ChatRoom({}) {
     setDrafts(currentDrafts);
     setReceivedCompletion(false);
     player.set("acceptSuggestion", true);
+    player.set("copySuggestion", messageContent);
     player.set("suggestedReply", { content: "" });
   }
 
@@ -470,6 +471,7 @@ export default function ChatRoom({}) {
       },
     ]);
     player.set("acceptSuggestion", true);
+    player.set("sendSuggestion", messageContent);
     setReceivedCompletion(false);
     player.set("sendMsg", {
       sender: participantIdx.toString(),
