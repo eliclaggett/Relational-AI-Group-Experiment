@@ -282,13 +282,13 @@ export default function Tutorial({ next }) {
         <img src="assets/step_2.png" style={{ width: "50%", margin: "0 auto", display: "block" }} />
         <Typography variant="body1">
           After all participants join in, you will be placed in a chat room with other participants and a
-          chatbot moderator. There will be three rounds of conversation. In between two round, you will be given a transition window to view other rooms.
+          chatbot moderator. In between two round, you will be given a transition window to view other rooms.
           Remember that you must view other rooms, but it is not mandatory to change room if you do not wish to.
            
           <br />
         </Typography>
         <FormControl sx={{ pt: 4 }}>
-          <FormLabel>Is the statement True or False: 'You must check other rooms, but it is not mandatory to join a different group if I do not wish to.'</FormLabel>
+          <FormLabel>Is the statement True or False: 'You must check other rooms, but it is not mandatory to join a different group if you do not wish to.'</FormLabel>
           <RadioGroup
             name="q4"
             onChange={handleRadioButtonChange}
